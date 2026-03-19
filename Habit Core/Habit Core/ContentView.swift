@@ -6,7 +6,7 @@ struct ContentView: View {
             Tab(String(localized: "tab.today"), systemImage: "target") {
                 TodayView()
             }
-            Tab(String(localized: "tab.tracker"), systemImage: "chart.bar.fill") {
+            Tab(String(localized: "tab.tracker"), systemImage: "rectangle.grid.3x3.fill") {
                 TrackerView()
             }
             Tab(String(localized: "tab.settings"), systemImage: "gearshape.fill") {
