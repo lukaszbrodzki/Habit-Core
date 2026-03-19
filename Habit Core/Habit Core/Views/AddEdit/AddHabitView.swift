@@ -30,7 +30,7 @@ struct AddHabitView: View {
             Form {
                 nameSection
                 colorSection
-                frequencySection
+                if !isEditing { frequencySection }
                 endDateSection
             }
             .navigationTitle(isEditing
