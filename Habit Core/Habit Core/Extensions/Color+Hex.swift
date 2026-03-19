@@ -23,9 +23,9 @@ extension Color {
         "#F39C12",  // Amber
         "#795548",  // Brown
         "#00BCD4",  // Cyan
-        "#8BC34A",  // Light Green
-        "#FF5722",  // Deep Orange
+        "#C0CA33",  // Lime
+        "#AD1457",  // Raspberry
         "#607D8B",  // Blue Grey
-        "#AB47BC",  // Lavender
+        "#1565C0",  // Cobalt
     ]
 }
