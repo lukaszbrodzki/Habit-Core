@@ -11,6 +11,6 @@ struct Habit_CoreApp: App {
                 .environment(theme)
                 .preferredColorScheme(theme.colorScheme)
         }
-        .modelContainer(for: [Habit.self, HabitEntry.self], cloudKitDatabase: .automatic)
+        .modelContainer(for: [Habit.self, HabitEntry.self])
     }
 }

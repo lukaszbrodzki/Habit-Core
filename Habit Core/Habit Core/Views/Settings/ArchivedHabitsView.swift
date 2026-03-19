@@ -10,39 +10,17 @@ struct ArchivedHabitsView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
+            List {
+                ForEach(archived, id: \.id) { habit in
+                    row(for: habit)
+                }
+            }
+            .overlay {
                 if archived.isEmpty {
                     ContentUnavailableView(
                         String(localized: "archived.empty.title"),
                         systemImage: "archivebox"
                     )
-                } else {
-                    List(archived) { habit in
-                        HStack {
-                            Circle()
-                                .fill(Color(hex: habit.colorHex) ?? .blue)
-                                .frame(width: 10, height: 10)
-
-                            Text(habit.name)
-
-                            Spacer()
-
-                            Button(String(localized: "settings.restore")) {
-                                habit.isArchived = false
-                                try? modelContext.save()
-                            }
-                            .foregroundStyle(.accentColor)
-                            .buttonStyle(.borderless)
-                        }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                modelContext.delete(habit)
-                                try? modelContext.save()
-                            } label: {
-                                Label(String(localized: "button.delete"), systemImage: "trash")
-                            }
-                        }
-                    }
                 }
             }
             .navigationTitle(String(localized: "settings.archived"))
@@ -51,6 +29,33 @@ struct ArchivedHabitsView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button(String(localized: "button.done")) { dismiss() }
                 }
+            }
+        }
+    }
+
+    private func row(for habit: Habit) -> some View {
+        HStack {
+            Circle()
+                .fill(Color(hex: habit.colorHex) ?? .blue)
+                .frame(width: 10, height: 10)
+
+            Text(habit.name)
+
+            Spacer()
+
+            Button(String(localized: "settings.restore")) {
+                habit.isArchived = false
+                try? modelContext.save()
+            }
+            .foregroundStyle(Color.accentColor)
+            .buttonStyle(.borderless)
+        }
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) {
+                modelContext.delete(habit)
+                try? modelContext.save()
+            } label: {
+                Label(String(localized: "button.delete"), systemImage: "trash")
             }
         }
     }
