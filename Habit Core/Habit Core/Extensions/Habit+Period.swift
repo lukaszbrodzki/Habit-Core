@@ -152,6 +152,21 @@ extension Habit {
     /// Deadline date for Today-view display.
     var dueDate: Date? { period(for: Date())?.end }
 
+    /// Longest consecutive streak of completed periods (chronological order).
+    func longestStreak(in periods: [Period]) -> Int {
+        var longest = 0
+        var current = 0
+        for period in periods.reversed() {   // reversed = oldest first
+            if isCompleted(in: period) {
+                current += 1
+                if current > longest { longest = current }
+            } else {
+                current = 0
+            }
+        }
+        return longest
+    }
+
     /// Sort key for Today view: 0 = due & incomplete, 1 = not due, 2 = completed.
     var todaySortPriority: Int {
         if isCompletedToday { return 2 }

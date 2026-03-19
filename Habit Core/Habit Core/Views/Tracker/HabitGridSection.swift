@@ -65,6 +65,7 @@ struct HabitGridSection: View {
         let total     = periods.count
         let completed = periods.filter { habit.isCompleted(in: $0) }.count
         let pct       = total > 0 ? Int(Double(completed) / Double(total) * 100) : 0
+        let streak    = habit.longestStreak(in: periods)
 
         return HStack(spacing: 16) {
             statChip(
@@ -74,6 +75,10 @@ struct HabitGridSection: View {
             statChip(
                 value: "\(pct)%",
                 label: String(localized: "tracker.stat.rate")
+            )
+            statChip(
+                value: "\(streak)",
+                label: String(localized: "tracker.stat.streak")
             )
             Spacer()
         }

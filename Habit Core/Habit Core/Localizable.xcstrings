@@ -727,6 +727,22 @@
           }
         }
       }
+    },
+    "tracker.stat.streak" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Longest Streak"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Najdłuższa seria"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"
