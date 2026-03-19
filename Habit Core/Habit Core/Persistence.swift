@@ -1,57 +1,39 @@
-//
-//  Persistence.swift
-//  Habit Core
-//
-//  Created by Łukasz Brodzki on 19/03/2026.
-//
+import SwiftUI
 
-import CoreData
+// MARK: - App-wide theme state
 
-struct PersistenceController {
-    static let shared = PersistenceController()
+@Observable
+final class AppTheme {
+    static let shared = AppTheme()
 
-    @MainActor
-    static let preview: PersistenceController = {
-        let result = PersistenceController(inMemory: true)
-        let viewContext = result.container.viewContext
-        for _ in 0..<10 {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
+    var preference: ColorSchemePreference {
+        didSet {
+            UserDefaults.standard.set(preference.rawValue, forKey: "colorSchemePreference")
         }
-        do {
-            try viewContext.save()
-        } catch {
-            // Replace this implementation with code to handle the error appropriately.
-            // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-            let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+    }
+
+    var colorScheme: ColorScheme? {
+        switch preference {
+        case .light:  return .light
+        case .dark:   return .dark
+        case .system: return nil
         }
-        return result
-    }()
+    }
 
-    let container: NSPersistentCloudKitContainer
+    private init() {
+        let raw = UserDefaults.standard.string(forKey: "colorSchemePreference") ?? ""
+        preference = ColorSchemePreference(rawValue: raw) ?? .system
+    }
+}
 
-    init(inMemory: Bool = false) {
-        container = NSPersistentCloudKitContainer(name: "Habit_Core")
-        if inMemory {
-            container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
+enum ColorSchemePreference: String, CaseIterable {
+    case system, light, dark
+
+    var localizedName: String {
+        switch self {
+        case .system: return String(localized: "theme.system")
+        case .light:  return String(localized: "theme.light")
+        case .dark:   return String(localized: "theme.dark")
         }
-        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            if let error = error as NSError? {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-
-                /*
-                 Typical reasons for an error here include:
-                 * The parent directory does not exist, cannot be created, or disallows writing.
-                 * The persistent store is not accessible, due to permissions or data protection when the device is locked.
-                 * The device is out of space.
-                 * The store could not be migrated to the current model version.
-                 Check the error message to determine what the actual problem was.
-                 */
-                fatalError("Unresolved error \(error), \(error.userInfo)")
-            }
-        })
-        container.viewContext.automaticallyMergesChangesFromParent = true
     }
 }

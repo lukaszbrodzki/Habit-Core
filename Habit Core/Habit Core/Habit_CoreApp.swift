@@ -1,21 +1,16 @@
-//
-//  Habit_CoreApp.swift
-//  Habit Core
-//
-//  Created by Łukasz Brodzki on 19/03/2026.
-//
-
 import SwiftUI
-import CoreData
+import SwiftData
 
 @main
 struct Habit_CoreApp: App {
-    let persistenceController = PersistenceController.shared
+    @State private var theme = AppTheme.shared
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environment(theme)
+                .preferredColorScheme(theme.colorScheme)
         }
+        .modelContainer(for: [Habit.self, HabitEntry.self], cloudKitDatabase: .automatic)
     }
 }
