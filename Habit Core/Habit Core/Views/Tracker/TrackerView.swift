@@ -36,6 +36,7 @@ struct TrackerView: View {
                 }
                 .padding(.vertical)
             }
+            .appBackground()
             .navigationTitle(String(localized: "tab.tracker"))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

@@ -57,6 +57,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            .appBackground()
             .navigationTitle(String(localized: "tab.settings"))
             .sheet(isPresented: $showArchived) {
                 ArchivedHabitsView()

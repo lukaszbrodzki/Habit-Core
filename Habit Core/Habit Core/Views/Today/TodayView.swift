@@ -40,6 +40,7 @@ struct TodayView: View {
                     .listStyle(.plain)
                 }
             }
+            .appBackground()
             .navigationTitle(String(localized: "tab.today"))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
