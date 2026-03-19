@@ -39,12 +39,11 @@ struct TrackerView: View {
             .navigationTitle(String(localized: "tab.tracker"))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Picker("", selection: $showCombined) {
-                        Image(systemName: "rectangle.grid.1x2").tag(false)
-                        Image(systemName: "square.grid.3x3").tag(true)
+                    Button {
+                        showCombined.toggle()
+                    } label: {
+                        Image(systemName: showCombined ? "rectangle.grid.1x2" : "square.grid.3x3")
                     }
-                    .pickerStyle(.segmented)
-                    .fixedSize()
                 }
             }
             .overlay {
