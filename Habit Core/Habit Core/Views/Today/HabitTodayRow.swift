@@ -53,7 +53,8 @@ struct HabitTodayRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
         .opacity(habit.canMarkToday || habit.isCompletedToday ? 1 : 0.45)
     }
 
