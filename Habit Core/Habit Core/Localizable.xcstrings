@@ -525,13 +525,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Today"
+            "value" : "Focus"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dzisiaj"
+            "value" : "Focus"
           }
         }
       }

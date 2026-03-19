@@ -3,7 +3,7 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            Tab(String(localized: "tab.today"), systemImage: "checkmark.circle.fill") {
+            Tab(String(localized: "tab.today"), systemImage: "target") {
                 TodayView()
             }
             Tab(String(localized: "tab.tracker"), systemImage: "chart.bar.fill") {
