@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// GitHub-style contribution grid for a single habit.
+/// Contribution grid for a single habit — single row, scrolls horizontally.
+/// Each square = one period (day / week / month / custom cycle).
 struct ContributionGrid: View {
     let habit: Habit
     /// Periods sorted newest → oldest (from Habit.allPeriods).
@@ -8,52 +9,20 @@ struct ContributionGrid: View {
 
     private let size: CGFloat = 13
     private let gap: CGFloat  = 3
-    private let rows: Int     = 7   // 7 rows for daily; 1 for others handled via separate layout
 
-    // MARK: - Data
-
-    private var effectiveRows: Int {
-        habit.frequency == .daily ? 7 : 1
-    }
-
-    /// Columns of periods, oldest first (left → right).
-    private var columns: [[Habit.Period?]] {
-        let sorted = Array(periods.reversed())   // oldest first
-        let numCols = Int(ceil(Double(sorted.count) / Double(effectiveRows)))
-        var grid: [[Habit.Period?]] = Array(
-            repeating: Array(repeating: nil, count: effectiveRows),
-            count: numCols
-        )
-        for (idx, period) in sorted.enumerated() {
-            let col = idx / effectiveRows
-            let row = idx % effectiveRows
-            if col < numCols { grid[col][row] = period }
-        }
-        return grid
-    }
-
-    // MARK: - Body
+    /// Oldest first for left-to-right display.
+    private var sorted: [Habit.Period] { periods.reversed() }
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(alignment: .top, spacing: gap) {
-                ForEach(columns.indices, id: \.self) { col in
-                    VStack(spacing: gap) {
-                        ForEach(0..<effectiveRows, id: \.self) { row in
-                            if let period = columns[col][row] {
-                                square(for: period)
-                            } else {
-                                Color.clear.frame(width: size, height: size)
-                            }
-                        }
-                    }
+            LazyHStack(spacing: gap) {
+                ForEach(sorted.indices, id: \.self) { idx in
+                    square(for: sorted[idx])
                 }
             }
             .padding(.vertical, 2)
         }
     }
-
-    // MARK: - Square
 
     private func square(for period: Habit.Period) -> some View {
         let completed = habit.isCompleted(in: period)
