@@ -22,5 +22,10 @@ extension Color {
         "#3F51B5",  // Indigo
         "#F39C12",  // Amber
         "#795548",  // Brown
+        "#00BCD4",  // Cyan
+        "#8BC34A",  // Light Green
+        "#FF5722",  // Deep Orange
+        "#607D8B",  // Blue Grey
+        "#AB47BC",  // Lavender
     ]
 }
