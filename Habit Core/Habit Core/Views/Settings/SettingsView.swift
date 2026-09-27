@@ -3,6 +3,7 @@ import SwiftData
 
 struct SettingsView: View {
     @Environment(AppTheme.self) private var theme
+    @Environment(CloudSyncMonitor.self) private var syncMonitor
     @Query(
         filter: #Predicate<Habit> { !$0.isArchived },
         sort: [SortDescriptor(\Habit.sortOrder)]
@@ -47,6 +48,16 @@ struct SettingsView: View {
                          destination: URL(string: "https://example.com/privacy")!)
                 }
 
+                // iCloud sync status
+                Section(String(localized: "settings.section.icloud")) {
+                    HStack {
+                        Text(String(localized: "settings.icloud.status"))
+                        Spacer()
+                        Text(syncStatusText)
+                            .foregroundStyle(syncStatusColor)
+                    }
+                }
+
                 // App info
                 Section {
                     HStack {
@@ -72,5 +83,27 @@ struct SettingsView: View {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
         let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
         return "\(v) (\(b))"
+    }
+
+    private var syncStatusText: String {
+        switch syncMonitor.status {
+        case .idle:
+            return String(localized: "settings.icloud.idle")
+        case .syncing:
+            return String(localized: "settings.icloud.syncing")
+        case .success:
+            return String(localized: "settings.icloud.synced")
+        case .failed(let message):
+            return message
+        }
+    }
+
+    private var syncStatusColor: Color {
+        switch syncMonitor.status {
+        case .idle:    return .secondary
+        case .syncing: return .blue
+        case .success: return .green
+        case .failed:  return .red
+        }
     }
 }
