@@ -92,5 +92,6 @@ struct HabitTodayRow: View {
         }
 
         try? modelContext.save()
+        NotificationManager.shared.refreshDailyReminder(context: modelContext)
     }
 }

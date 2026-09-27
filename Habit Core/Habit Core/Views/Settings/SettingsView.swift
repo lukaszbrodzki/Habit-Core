@@ -26,6 +26,19 @@ struct SettingsView: View {
                     }
                 }
 
+                // Reminders
+                Section(String(localized: "settings.section.reminders")) {
+                    @Bindable var t = theme
+                    Toggle(String(localized: "settings.reminder.toggle"), isOn: $t.reminderEnabled)
+                    if t.reminderEnabled {
+                        DatePicker(
+                            String(localized: "settings.reminder.time"),
+                            selection: $t.reminderTime,
+                            displayedComponents: .hourAndMinute
+                        )
+                    }
+                }
+
                 // Habits management
                 Section(String(localized: "settings.section.habits")) {
                     Button(String(localized: "settings.archived")) {
@@ -75,6 +88,12 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showReorder) {
                 ReorderHabitsView(habits: habits)
+            }
+            .onChange(of: theme.reminderEnabled) {
+                NotificationManager.shared.refreshDailyReminder(habits: habits)
+            }
+            .onChange(of: theme.reminderTime) {
+                NotificationManager.shared.refreshDailyReminder(habits: habits)
             }
         }
     }

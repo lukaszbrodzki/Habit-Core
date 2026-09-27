@@ -220,6 +220,86 @@
         }
       }
     },
+    "notification.reminder.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You still have habits to complete today."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masz jeszcze nawyki do wykonania dzisiaj."
+          }
+        }
+      }
+    },
+    "notification.reminder.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Habit Reminder"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przypomnienie o nawykach"
+          }
+        }
+      }
+    },
+    "settings.reminder.time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Godzina"
+          }
+        }
+      }
+    },
+    "settings.reminder.toggle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily Reminder"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codzienne przypomnienie"
+          }
+        }
+      }
+    },
+    "settings.section.reminders" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reminders"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przypomnienia"
+          }
+        }
+      }
+    },
     "addhabit.section.color" : {
       "localizations" : {
         "en" : {

@@ -56,6 +56,9 @@ struct TodayView: View {
             .sheet(isPresented: $showingAddHabit) {
                 AddHabitView()
             }
+            .onAppear {
+                NotificationManager.shared.refreshDailyReminder(habits: habits)
+            }
         }
     }
 }

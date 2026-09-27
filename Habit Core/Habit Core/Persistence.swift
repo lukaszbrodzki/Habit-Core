@@ -27,10 +27,27 @@ final class AppTheme {
         }
     }
 
+    /// Single daily reminder, sent only if some habit is still due when it fires.
+    var reminderEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(reminderEnabled, forKey: "reminderEnabled")
+        }
+    }
+
+    /// Only the time-of-day components are used.
+    var reminderTime: Date {
+        didSet {
+            UserDefaults.standard.set(reminderTime, forKey: "reminderTime")
+        }
+    }
+
     private init() {
         let raw = UserDefaults.standard.string(forKey: "colorSchemePreference") ?? ""
         preference = ColorSchemePreference(rawValue: raw) ?? .system
         combinedGridColorHex = UserDefaults.standard.string(forKey: "combinedGridColorHex") ?? "#4A90D9"
+        reminderEnabled = UserDefaults.standard.bool(forKey: "reminderEnabled")
+        reminderTime = UserDefaults.standard.object(forKey: "reminderTime") as? Date
+            ?? Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
     }
 }
 

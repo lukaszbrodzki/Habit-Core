@@ -237,6 +237,7 @@ struct AddHabitView: View {
         habit.endDate         = hasEndDate ? endDate : nil
 
         try? modelContext.save()
+        NotificationManager.shared.refreshDailyReminder(context: modelContext)
         dismiss()
     }
 
@@ -248,6 +249,7 @@ struct AddHabitView: View {
         habit.hasStartDate = false
         habit.startDate = nil
         try? modelContext.save()
+        NotificationManager.shared.refreshDailyReminder(context: modelContext)
         dismiss()
     }
 
@@ -255,6 +257,7 @@ struct AddHabitView: View {
         guard let habit = editing else { return }
         modelContext.delete(habit)
         try? modelContext.save()
+        NotificationManager.shared.refreshDailyReminder(context: modelContext)
         dismiss()
     }
 

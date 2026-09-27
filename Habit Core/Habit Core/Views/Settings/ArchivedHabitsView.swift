@@ -46,6 +46,7 @@ struct ArchivedHabitsView: View {
             Button(String(localized: "settings.restore")) {
                 habit.isArchived = false
                 try? modelContext.save()
+                NotificationManager.shared.refreshDailyReminder(context: modelContext)
             }
             .foregroundStyle(Color.accentColor)
             .buttonStyle(.borderless)
@@ -54,6 +55,7 @@ struct ArchivedHabitsView: View {
             Button(role: .destructive) {
                 modelContext.delete(habit)
                 try? modelContext.save()
+                NotificationManager.shared.refreshDailyReminder(context: modelContext)
             } label: {
                 Label(String(localized: "button.delete"), systemImage: "trash")
             }
