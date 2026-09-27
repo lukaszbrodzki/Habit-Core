@@ -5,6 +5,7 @@ import SwiftData
 struct Habit_CoreApp: App {
     @State private var theme = AppTheme.shared
     @State private var syncMonitor = CloudSyncMonitor.shared
+    @State private var notifications = NotificationManager.shared
 
     private let container: ModelContainer = {
         let schema = Schema([Habit.self, HabitEntry.self])
@@ -26,6 +27,7 @@ struct Habit_CoreApp: App {
             ContentView()
                 .environment(theme)
                 .environment(syncMonitor)
+                .environment(notifications)
                 .preferredColorScheme(theme.colorScheme)
         }
         .modelContainer(container)

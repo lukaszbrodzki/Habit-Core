@@ -11,17 +11,33 @@ import UserNotifications
 /// cancelled the moment nothing is left to do. The trade-off: if the app is never opened on a
 /// given day, that day's reminder never gets (re)scheduled. Acceptable for now since opening the
 /// app is how you mark habits done in the first place; revisit with BGTaskScheduler if it matters.
+@Observable
 final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationManager()
     private static let identifier = "dailyReminder"
 
+    private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
+
     private override init() {
         super.init()
         UNUserNotificationCenter.current().delegate = self
+        refreshAuthorizationStatus()
     }
 
     func requestAuthorization() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { [weak self] _, _ in
+            self?.refreshAuthorizationStatus()
+        }
+    }
+
+    /// Re-reads the system authorization status — call whenever the app becomes active, since the
+    /// user may have changed it in the Settings app while we were backgrounded.
+    func refreshAuthorizationStatus() {
+        UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
+            DispatchQueue.main.async {
+                self?.authorizationStatus = settings.authorizationStatus
+            }
+        }
     }
 
     func refreshDailyReminder(context: ModelContext) {
@@ -34,6 +50,8 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     func refreshDailyReminder(habits: [Habit]) {
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: [Self.identifier])
+
+        guard authorizationStatus == .authorized || authorizationStatus == .provisional else { return }
 
         let theme = AppTheme.shared
         guard theme.reminderEnabled else { return }

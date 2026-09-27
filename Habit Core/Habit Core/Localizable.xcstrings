@@ -284,6 +284,38 @@
         }
       }
     },
+    "settings.reminder.denied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notifications are turned off for Habit Core in system settings."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Powiadomienia dla Habit Core są wyłączone w ustawieniach systemowych."
+          }
+        }
+      }
+    },
+    "settings.reminder.opensettings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otwórz ustawienia"
+          }
+        }
+      }
+    },
     "settings.section.reminders" : {
       "localizations" : {
         "en" : {

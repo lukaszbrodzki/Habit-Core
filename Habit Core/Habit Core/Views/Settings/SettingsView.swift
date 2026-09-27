@@ -1,9 +1,12 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct SettingsView: View {
     @Environment(AppTheme.self) private var theme
     @Environment(CloudSyncMonitor.self) private var syncMonitor
+    @Environment(NotificationManager.self) private var notifications
+    @Environment(\.scenePhase) private var scenePhase
     @Query(
         filter: #Predicate<Habit> { !$0.isArchived },
         sort: [SortDescriptor(\Habit.sortOrder)]
@@ -28,14 +31,24 @@ struct SettingsView: View {
 
                 // Reminders
                 Section(String(localized: "settings.section.reminders")) {
-                    @Bindable var t = theme
-                    Toggle(String(localized: "settings.reminder.toggle"), isOn: $t.reminderEnabled)
-                    if t.reminderEnabled {
-                        DatePicker(
-                            String(localized: "settings.reminder.time"),
-                            selection: $t.reminderTime,
-                            displayedComponents: .hourAndMinute
-                        )
+                    if notifications.authorizationStatus == .denied {
+                        Text(String(localized: "settings.reminder.denied"))
+                            .foregroundStyle(.secondary)
+                        Button(String(localized: "settings.reminder.opensettings")) {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                    } else {
+                        @Bindable var t = theme
+                        Toggle(String(localized: "settings.reminder.toggle"), isOn: $t.reminderEnabled)
+                        if t.reminderEnabled {
+                            DatePicker(
+                                String(localized: "settings.reminder.time"),
+                                selection: $t.reminderTime,
+                                displayedComponents: .hourAndMinute
+                            )
+                        }
                     }
                 }
 
@@ -89,11 +102,19 @@ struct SettingsView: View {
             .sheet(isPresented: $showReorder) {
                 ReorderHabitsView(habits: habits)
             }
-            .onChange(of: theme.reminderEnabled) {
+            .onChange(of: theme.reminderEnabled) { _, enabled in
+                if enabled && notifications.authorizationStatus == .notDetermined {
+                    NotificationManager.shared.requestAuthorization()
+                }
                 NotificationManager.shared.refreshDailyReminder(habits: habits)
             }
             .onChange(of: theme.reminderTime) {
                 NotificationManager.shared.refreshDailyReminder(habits: habits)
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    NotificationManager.shared.refreshAuthorizationStatus()
+                }
             }
         }
     }
