@@ -9,19 +9,28 @@ struct ContributionGrid: View {
 
     private let size: CGFloat = 13
     private let gap: CGFloat  = 3
+    private let columns = 20
 
     /// Oldest first for left-to-right display.
     private var sorted: [Habit.Period] { periods.reversed() }
 
+    private var rows: [[Habit.Period]] {
+        stride(from: 0, to: sorted.count, by: columns).map {
+            Array(sorted[$0..<min($0 + columns, sorted.count)])
+        }
+    }
+
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: gap) {
-                ForEach(sorted.indices, id: \.self) { idx in
-                    square(for: sorted[idx])
+        VStack(alignment: .leading, spacing: gap) {
+            ForEach(rows.indices, id: \.self) { rowIdx in
+                HStack(spacing: gap) {
+                    ForEach(rows[rowIdx].indices, id: \.self) { colIdx in
+                        square(for: rows[rowIdx][colIdx])
+                    }
                 }
             }
-            .padding(.vertical, 2)
         }
+        .padding(.vertical, 2)
     }
 
     private func square(for period: Habit.Period) -> some View {

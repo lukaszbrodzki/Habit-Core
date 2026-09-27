@@ -28,11 +28,16 @@ final class Habit {
     var weekDay: Int = 2
     /// For .monthly: day of month (1–31)
     var monthDay: Int = 1
+    var startDate: Date? = nil
+    var hasStartDate: Bool = false
     var endDate: Date? = nil
     var hasEndDate: Bool = false
     var isArchived: Bool = false
     var sortOrder: Int = 0
     var createdAt: Date = Date()
+
+    /// Effective start: custom startDate if set, otherwise createdAt.
+    var effectiveStart: Date { hasStartDate ? (startDate ?? createdAt) : createdAt }
 
     @Relationship(deleteRule: .cascade, inverse: \HabitEntry.habit)
     var entries: [HabitEntry] = []
@@ -50,6 +55,8 @@ final class Habit {
         customDays: Int = 2,
         weekDay: Int = 2,
         monthDay: Int = 1,
+        startDate: Date? = nil,
+        hasStartDate: Bool = false,
         endDate: Date? = nil,
         hasEndDate: Bool = false,
         sortOrder: Int = 0
@@ -61,6 +68,8 @@ final class Habit {
         self.customDays = customDays
         self.weekDay = weekDay
         self.monthDay = monthDay
+        self.startDate = startDate
+        self.hasStartDate = hasStartDate
         self.endDate = endDate
         self.hasEndDate = hasEndDate
         self.sortOrder = sortOrder

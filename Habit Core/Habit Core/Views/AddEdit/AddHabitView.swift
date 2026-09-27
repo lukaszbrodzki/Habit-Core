@@ -17,8 +17,13 @@ struct AddHabitView: View {
     @State private var customDays      = 7
     @State private var weekDay         = 2   // Monday
     @State private var monthDay        = 1
+    @State private var hasStartDate    = false
+    @State private var startDate       = Date()
     @State private var hasEndDate      = false
     @State private var endDate         = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
+
+    @State private var showResetConfirm  = false
+    @State private var showDeleteConfirm = false
 
     private var isEditing: Bool   { editing != nil }
     private var canSave:   Bool   { !name.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -31,7 +36,8 @@ struct AddHabitView: View {
                 nameSection
                 colorSection
                 if !isEditing { frequencySection }
-                endDateSection
+                datesSection
+                if isEditing { dangerSection }
             }
             .navigationTitle(isEditing
                 ? String(localized: "addhabit.title.edit")
@@ -39,14 +45,36 @@ struct AddHabitView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "button.cancel")) { dismiss() }
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "button.save"), action: save)
-                        .disabled(!canSave)
+                    Button(action: save) {
+                        Image(systemName: "checkmark")
+                    }
+                    .disabled(!canSave)
                 }
             }
             .onAppear(perform: loadExisting)
+            .sheet(isPresented: $showResetConfirm) {
+                ConfirmByTypingView(
+                    title:       String(localized: "habit.reset.title"),
+                    message:     String(localized: "habit.reset.message"),
+                    keyword:     String(localized: "confirm.keyword.reset"),
+                    buttonLabel: String(localized: "habit.reset.title"),
+                    onConfirm:   resetHabit
+                )
+            }
+            .sheet(isPresented: $showDeleteConfirm) {
+                ConfirmByTypingView(
+                    title:       String(localized: "habit.delete.title"),
+                    message:     String(localized: "habit.delete.message"),
+                    keyword:     String(localized: "confirm.keyword.delete"),
+                    buttonLabel: String(localized: "habit.delete.title"),
+                    onConfirm:   deleteHabit
+                )
+            }
         }
     }
 
@@ -130,16 +158,42 @@ struct AddHabitView: View {
         }
     }
 
-    private var endDateSection: some View {
+    private var startDateLocked: Bool {
+        guard let h = editing else { return false }
+        return h.effectiveStart < Calendar.current.startOfDay(for: Date())
+    }
+
+    private var datesSection: some View {
         Section {
+            Toggle(String(localized: "addhabit.startdate.toggle"), isOn: $hasStartDate)
+                .disabled(startDateLocked)
+            if hasStartDate {
+                DatePicker(
+                    String(localized: "addhabit.startdate"),
+                    selection: $startDate,
+                    displayedComponents: .date
+                )
+                .disabled(startDateLocked)
+            }
             Toggle(String(localized: "addhabit.enddate.toggle"), isOn: $hasEndDate)
             if hasEndDate {
                 DatePicker(
                     String(localized: "addhabit.enddate"),
                     selection: $endDate,
-                    in: Date()...,
+                    in: startDate...,
                     displayedComponents: .date
                 )
+            }
+        }
+    }
+
+    private var dangerSection: some View {
+        Section {
+            Button(String(localized: "habit.reset.button"), role: .destructive) {
+                showResetConfirm = true
+            }
+            Button(String(localized: "habit.delete.button"), role: .destructive) {
+                showDeleteConfirm = true
             }
         }
     }
@@ -155,8 +209,10 @@ struct AddHabitView: View {
         customDays  = h.customDays
         weekDay     = h.weekDay
         monthDay    = h.monthDay
-        hasEndDate  = h.hasEndDate
-        endDate     = h.endDate ?? Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
+        hasStartDate = h.hasStartDate
+        startDate    = h.startDate ?? Date()
+        hasEndDate   = h.hasEndDate
+        endDate      = h.endDate ?? Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
     }
 
     private func save() {
@@ -173,9 +229,29 @@ struct AddHabitView: View {
         habit.customDays      = customDays
         habit.weekDay         = weekDay
         habit.monthDay        = monthDay
+        habit.hasStartDate    = hasStartDate
+        habit.startDate       = hasStartDate ? startDate : nil
         habit.hasEndDate      = hasEndDate
         habit.endDate         = hasEndDate ? endDate : nil
 
+        try? modelContext.save()
+        dismiss()
+    }
+
+    private func resetHabit() {
+        guard let habit = editing else { return }
+        habit.entries.forEach { modelContext.delete($0) }
+        habit.entries.removeAll()
+        habit.createdAt = Date()
+        habit.hasStartDate = false
+        habit.startDate = nil
+        try? modelContext.save()
+        dismiss()
+    }
+
+    private func deleteHabit() {
+        guard let habit = editing else { return }
+        modelContext.delete(habit)
         try? modelContext.save()
         dismiss()
     }

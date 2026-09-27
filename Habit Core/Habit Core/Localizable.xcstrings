@@ -152,6 +152,38 @@
         }
       }
     },
+    "addhabit.startdate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start date"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data początkowa"
+          }
+        }
+      }
+    },
+    "addhabit.startdate.toggle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Set start date"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ustaw datę początkową"
+          }
+        }
+      }
+    },
     "addhabit.title.add" : {
       "localizations" : {
         "en" : {
@@ -265,6 +297,7 @@
       }
     },
     "button.save" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -276,6 +309,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zapisz"
+          }
+        }
+      }
+    },
+    "confirm.keyword.delete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "delete"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "delete"
+          }
+        }
+      }
+    },
+    "confirm.keyword.reset" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reset"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "reset"
+          }
+        }
+      }
+    },
+    "confirm.type.prompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type \"%@\" to confirm:"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpisz \"%@\" aby potwierdzić:"
           }
         }
       }
@@ -340,6 +421,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Co tydzień"
+          }
+        }
+      }
+    },
+    "habit.delete.button" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete habit"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń nawyk"
+          }
+        }
+      }
+    },
+    "habit.delete.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will permanently delete this habit and all its history. This action cannot be undone."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spowoduje to trwałe usunięcie nawyku i całej jego historii. Tej operacji nie można cofnąć."
+          }
+        }
+      }
+    },
+    "habit.delete.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Habit"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń nawyk"
+          }
+        }
+      }
+    },
+    "habit.reset.button" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset habit"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj nawyk"
+          }
+        }
+      }
+    },
+    "habit.reset.message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will permanently delete all progress for this habit. The habit itself will remain. This action cannot be undone."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spowoduje to trwałe usunięcie całego postępu dla tego nawyku. Sam nawyk pozostanie. Tej operacji nie można cofnąć."
+          }
+        }
+      }
+    },
+    "habit.reset.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Habit"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resetuj nawyk"
           }
         }
       }

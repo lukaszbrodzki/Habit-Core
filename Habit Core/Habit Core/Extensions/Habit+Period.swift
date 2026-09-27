@@ -21,7 +21,7 @@ extension Habit {
     ///   Wed → following Tue, giving the user the whole week until the deadline.
     /// - **Monthly** (e.g. every 1st): the ~month-long window whose deadline is
     ///   the *next* occurrence of `monthDay` on or after `date`.
-    /// - **Custom** (every N days): the N-day slot from `createdAt`.
+    /// - **Custom** (every N days): the N-day slot from `effectiveStart`.
     func period(for date: Date = Date()) -> Period? {
         let cal = Calendar.current
 
@@ -76,13 +76,13 @@ extension Habit {
                 let prevStart = cal.startOfDay(for: prevDeadline)
                 start = cal.date(byAdding: .day, value: 1, to: prevStart) ?? deadlineStart
             } else {
-                start = cal.startOfDay(for: createdAt)
+                start = cal.startOfDay(for: effectiveStart)
             }
             return Period(start: start, end: end)
 
         // MARK: Custom
         case .custom:
-            let origin = cal.startOfDay(for: createdAt)
+            let origin = cal.startOfDay(for: effectiveStart)
             let today  = cal.startOfDay(for: date)
             let diff   = cal.dateComponents([.day], from: origin, to: today).day ?? 0
             let idx    = diff / customDays
@@ -133,6 +133,7 @@ extension Habit {
 
     var canMarkToday: Bool {
         guard !isArchived else { return false }
+        if Date() < effectiveStart { return false }
         if hasEndDate, let ed = endDate, Date() > ed { return false }
         guard let p = period(for: Date()) else { return false }
         return Date() <= p.end
@@ -150,7 +151,14 @@ extension Habit {
     }
 
     /// Deadline date for Today-view display.
-    var dueDate: Date? { period(for: Date())?.end }
+    /// If the habit hasn't started yet, returns the end of the first active period.
+    var dueDate: Date? {
+        let now = Date()
+        if now < effectiveStart {
+            return period(for: effectiveStart)?.end
+        }
+        return period(for: now)?.end
+    }
 
     /// Longest consecutive streak of completed periods (chronological order).
     func longestStreak(in periods: [Period]) -> Int {
@@ -175,12 +183,12 @@ extension Habit {
 
     // MARK: - History periods (newest first)
 
-    /// All periods from `createdAt` up to `date`, newest first.
+    /// All periods from `effectiveStart` up to `date`, newest first.
     /// Capped at 1 year / 400 iterations.
     func allPeriods(upTo date: Date = Date()) -> [Period] {
         let cal        = Calendar.current
         let cutoff     = cal.date(byAdding: .year, value: -1, to: date) ?? date
-        let habitStart = cal.startOfDay(for: createdAt)
+        let habitStart = cal.startOfDay(for: effectiveStart)
         let lowerBound = habitStart > cutoff ? habitStart : cutoff
 
         var periods    = [Period]()
