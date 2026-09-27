@@ -91,6 +91,7 @@ struct CombinedGrid: View {
             }
             .padding(.vertical, 2)
         }
+        .defaultScrollAnchor(.trailing)
     }
 
     private func completionRate(on date: Date) -> Double {
