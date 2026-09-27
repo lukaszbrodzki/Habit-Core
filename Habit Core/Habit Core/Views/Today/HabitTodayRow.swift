@@ -76,7 +76,7 @@ struct HabitTodayRow: View {
         if habit.isCompletedToday {
             // Remove the entry for the current period
             if let p = habit.period(for: Date()),
-               let entry = habit.entries.first(where: {
+               let entry = habit.entries?.first(where: {
                    $0.isCompleted && $0.periodStart >= p.start && $0.periodStart <= p.end
                }) {
                 modelContext.delete(entry)
@@ -87,7 +87,7 @@ struct HabitTodayRow: View {
                 entry.isCompleted = true
                 entry.completedAt = Date()
                 modelContext.insert(entry)
-                habit.entries.append(entry)
+                habit.entries?.append(entry)
             }
         }
 

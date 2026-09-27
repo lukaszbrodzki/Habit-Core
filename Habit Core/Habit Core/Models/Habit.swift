@@ -39,8 +39,9 @@ final class Habit {
     /// Effective start: custom startDate if set, otherwise createdAt.
     var effectiveStart: Date { hasStartDate ? (startDate ?? createdAt) : createdAt }
 
+    /// Optional array type is required for CloudKit — SwiftData rejects non-optional to-many relationships.
     @Relationship(deleteRule: .cascade, inverse: \HabitEntry.habit)
-    var entries: [HabitEntry] = []
+    var entries: [HabitEntry]? = []
 
     var frequency: FrequencyType {
         get { FrequencyType(rawValue: frequencyRaw) ?? .daily }

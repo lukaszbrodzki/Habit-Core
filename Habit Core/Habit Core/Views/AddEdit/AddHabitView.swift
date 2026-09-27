@@ -242,8 +242,8 @@ struct AddHabitView: View {
 
     private func resetHabit() {
         guard let habit = editing else { return }
-        habit.entries.forEach { modelContext.delete($0) }
-        habit.entries.removeAll()
+        habit.entries?.forEach { modelContext.delete($0) }
+        habit.entries?.removeAll()
         habit.createdAt = Date()
         habit.hasStartDate = false
         habit.startDate = nil

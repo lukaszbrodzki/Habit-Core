@@ -145,7 +145,7 @@ extension Habit {
     }
 
     func isCompleted(in period: Period) -> Bool {
-        entries.contains {
+        (entries ?? []).contains {
             $0.isCompleted && $0.periodStart >= period.start && $0.periodStart <= period.end
         }
     }
