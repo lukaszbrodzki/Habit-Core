@@ -889,6 +889,22 @@
         }
       }
     },
+    "tracker.stat.perfectdays" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perfect Days"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idealne dni"
+          }
+        }
+      }
+    },
     "tracker.stat.rate" : {
       "localizations" : {
         "en" : {

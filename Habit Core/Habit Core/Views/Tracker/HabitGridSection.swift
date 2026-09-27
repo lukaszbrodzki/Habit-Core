@@ -69,26 +69,19 @@ struct HabitGridSection: View {
         let streak    = habit.longestStreak(in: periods)
 
         return HStack(spacing: 16) {
-            statChip(
+            StatChip(
                 value: "\(completed)/\(total)",
                 label: String(localized: "tracker.stat.completed")
             )
-            statChip(
+            StatChip(
                 value: "\(pct)%",
                 label: String(localized: "tracker.stat.rate")
             )
-            statChip(
+            StatChip(
                 value: "\(streak)",
                 label: String(localized: "tracker.stat.streak")
             )
             Spacer()
-        }
-    }
-
-    private func statChip(value: String, label: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(value).font(.subheadline.weight(.semibold))
-            Text(label).font(.caption2).foregroundStyle(.secondary)
         }
     }
 }

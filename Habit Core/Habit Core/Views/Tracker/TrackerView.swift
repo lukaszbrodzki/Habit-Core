@@ -9,6 +9,7 @@ struct TrackerView: View {
     private var habits: [Habit]
 
     @State private var showCombined = false
+    @State private var showCombinedSettings = false
     @State private var habitToEdit: Habit?
 
     var body: some View {
@@ -17,10 +18,24 @@ struct TrackerView: View {
                 LazyVStack(spacing: 14) {
                     if showCombined {
                         // Combined view
+                        let grid = CombinedGrid(habits: habits)
                         VStack(alignment: .leading, spacing: 10) {
-                            Text(String(localized: "tracker.combined.title"))
-                                .font(.headline)
-                            CombinedGrid(habits: habits)
+                            HStack(alignment: .top) {
+                                Text(String(localized: "tracker.combined.title"))
+                                    .font(.headline)
+                                Spacer()
+                                Button {
+                                    showCombinedSettings = true
+                                } label: {
+                                    Image(systemName: "gearshape")
+                                        .foregroundStyle(.secondary)
+                                        .padding(6)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            combinedStatsRow(grid.stats)
+                            grid
                         }
                         .padding(14)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -59,6 +74,27 @@ struct TrackerView: View {
             .sheet(item: $habitToEdit) { habit in
                 AddHabitView(editing: habit)
             }
+            .sheet(isPresented: $showCombinedSettings) {
+                CombinedGridSettingsView()
+            }
+        }
+    }
+
+    private func combinedStatsRow(_ stats: CombinedGrid.Stats) -> some View {
+        HStack(spacing: 16) {
+            StatChip(
+                value: "\(stats.perfectDays)/\(stats.totalDueDays)",
+                label: String(localized: "tracker.stat.perfectdays")
+            )
+            StatChip(
+                value: "\(stats.ratePercent)%",
+                label: String(localized: "tracker.stat.rate")
+            )
+            StatChip(
+                value: "\(stats.streak)",
+                label: String(localized: "tracker.stat.streak")
+            )
+            Spacer()
         }
     }
 }

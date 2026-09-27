@@ -20,9 +20,17 @@ final class AppTheme {
         }
     }
 
+    /// Accent color for the Tracker's combined "All Habits" heatmap.
+    var combinedGridColorHex: String {
+        didSet {
+            UserDefaults.standard.set(combinedGridColorHex, forKey: "combinedGridColorHex")
+        }
+    }
+
     private init() {
         let raw = UserDefaults.standard.string(forKey: "colorSchemePreference") ?? ""
         preference = ColorSchemePreference(rawValue: raw) ?? .system
+        combinedGridColorHex = UserDefaults.standard.string(forKey: "combinedGridColorHex") ?? "#4A90D9"
     }
 }
 
