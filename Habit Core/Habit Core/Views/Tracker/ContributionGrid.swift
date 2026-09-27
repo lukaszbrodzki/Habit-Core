@@ -60,13 +60,24 @@ struct CombinedGrid: View {
     private let gap: CGFloat  = 3
     private let columns = 20
 
-    // Last 365 days, oldest first
+    /// All days since the oldest active habit was added, oldest first (capped at 1 year).
     private var days: [Date] {
         let cal   = Calendar.current
         let today = cal.startOfDay(for: Date())
-        return (0..<365)
-            .compactMap { cal.date(byAdding: .day, value: -$0, to: today) }
-            .reversed()
+        guard let earliest = habits.filter({ !$0.isArchived }).map({ $0.effectiveStart }).min()
+        else { return [] }
+
+        let cutoff = cal.date(byAdding: .year, value: -1, to: today) ?? today
+        let start  = max(cal.startOfDay(for: earliest), cutoff)
+
+        var result:  [Date] = []
+        var cursor = start
+        while cursor <= today {
+            result.append(cursor)
+            guard let next = cal.date(byAdding: .day, value: 1, to: cursor) else { break }
+            cursor = next
+        }
+        return result
     }
 
     private var rows: [[Date]] {
@@ -115,9 +126,10 @@ struct CombinedGrid: View {
 
 extension CombinedGrid {
     struct Stats {
-        /// Days where every due habit was completed, out of days that had any habit due.
+        /// Days with no unmet habit (including days nothing was due), out of every day
+        /// since the oldest active habit was added.
         let perfectDays: Int
-        let totalDueDays: Int
+        let totalDays: Int
         /// Average completion rate across days with at least one due habit.
         let ratePercent: Int
         /// Longest run of consecutive days with no unmet habit (days with nothing due don't break it).
@@ -125,20 +137,21 @@ extension CombinedGrid {
     }
 
     var stats: Stats {
-        var perfectDays  = 0
-        var totalDueDays = 0
-        var rateSum       = 0.0
-        var streak        = 0
-        var best          = 0
+        var perfectDays = 0
+        var dueDayCount = 0
+        var rateSum     = 0.0
+        var streak      = 0
+        var best        = 0
 
         for day in days {
             let due = dueHabits(on: day)
             if due.isEmpty {
+                perfectDays += 1
                 streak += 1
                 best = max(best, streak)
                 continue
             }
-            totalDueDays += 1
+            dueDayCount += 1
             let rate = completionRate(on: day)
             rateSum += rate
             if rate == 1.0 {
@@ -150,7 +163,7 @@ extension CombinedGrid {
             best = max(best, streak)
         }
 
-        let pct = totalDueDays > 0 ? Int((rateSum / Double(totalDueDays)) * 100) : 0
-        return Stats(perfectDays: perfectDays, totalDueDays: totalDueDays, ratePercent: pct, streak: best)
+        let pct = dueDayCount > 0 ? Int((rateSum / Double(dueDayCount)) * 100) : 0
+        return Stats(perfectDays: perfectDays, totalDays: days.count, ratePercent: pct, streak: best)
     }
 }

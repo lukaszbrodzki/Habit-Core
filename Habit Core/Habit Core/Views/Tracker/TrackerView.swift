@@ -83,7 +83,7 @@ struct TrackerView: View {
     private func combinedStatsRow(_ stats: CombinedGrid.Stats) -> some View {
         HStack(spacing: 16) {
             StatChip(
-                value: "\(stats.perfectDays)/\(stats.totalDueDays)",
+                value: "\(stats.perfectDays)/\(stats.totalDays)",
                 label: String(localized: "tracker.stat.perfectdays")
             )
             StatChip(
