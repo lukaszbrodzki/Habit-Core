@@ -26,9 +26,13 @@
 5. ~~Push notifications~~ — done, as a single global "Daily Reminder" in Settings (not per-habit):
    `NotificationManager.refreshDailyReminder` schedules one local notification for today only if
    some active habit still has `canMarkToday && !isCompletedToday`, else cancels it. Recomputed on
-   app launch, habit toggle/add/edit/delete/restore, and reminder setting changes. Permission
-   requested on app launch (per explicit decision, not after first habit). Local-only, no APNs
-   entitlement needed.
+   app launch, habit toggle/add/edit/delete/restore, and reminder setting changes. Local-only, no
+   APNs entitlement needed.
+   - **Permission timing changed after a real bug**: originally requested at app launch per
+     explicit decision, but this caused a reproducible full-UI freeze on a physical iPhone
+     (persisted even after moving the call from `init()` to a `.task`). Removed entirely — now only
+     requested when the user turns on "Daily Reminder" in Settings. Verify this actually fixed the
+     freeze on the physical device before considering this closed.
    - **Known limitation**: no repeating/background trigger, so a day the app is never opened won't
      get that day's reminder (re)scheduled. Revisit with `BGTaskScheduler` if it matters in practice.
 6. Widget (WidgetKit) — home screen widget, needs App Group to share the SwiftData/CloudKit
