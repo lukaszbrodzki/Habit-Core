@@ -20,8 +20,11 @@
      "Synced" on a physical iPhone)
    - **c. CloudKit Console → Schema → Deploy to Production** — only remaining manual step, requires
      Apple Developer login
-4. Onboarding — brief first-run flow before the app is otherwise empty
-5. Push notifications — APNs entitlement + UNUserNotificationCenter, ask permission after onboarding
+4. ~~Onboarding~~ — skipped by decision: empty-state copy in Focus ("No Habits Yet" / "Tap + to add
+   your first habit.") already covers the first-run question, a full onboarding flow would be
+   overkill for a single-purpose app like this
+5. Push notifications — APNs entitlement + UNUserNotificationCenter, ask permission at a sensible
+   moment (e.g. after the user adds their first habit, not cold on launch)
    (may need a new `Habit.reminderTime`-style field)
 6. Widget (WidgetKit) — home screen widget, needs App Group to share the SwiftData/CloudKit
    container with the main app
