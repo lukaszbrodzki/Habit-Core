@@ -43,6 +43,7 @@ struct HabitGridSection: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(String(format: NSLocalizedString("accessibility.edithabit.format", comment: ""), habit.name))
             }
 
             // Grid

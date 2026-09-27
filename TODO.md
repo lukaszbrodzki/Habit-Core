@@ -2,9 +2,13 @@
 
 ## Before App Store release
 
-1. Accessibility labels — `.accessibilityLabel` on icon-only buttons (gearshape/xmark/checkmark in
-   AddHabitView, TrackerView, CombinedGridSettingsView, ConfirmByTypingView)
-2. Haptics — feedback on habit completion toggle
+1. ~~Accessibility labels~~ — done: `.accessibilityLabel` added to all icon-only buttons
+   (add/edit/gearshape/xmark/checkmark/toggle in TodayView, HabitGridSection, AddHabitView,
+   TrackerView, CombinedGridSettingsView, HabitTodayRow). Known remaining gap: the color-swatch
+   pickers (AddHabitView, CombinedGridSettingsView) use `.onTapGesture` on plain Circles, which
+   VoiceOver can't reach — would need converting to real accessible controls, left out of this pass.
+2. ~~Haptics~~ — done: `.sensoryFeedback` on the habit completion toggle in HabitTodayRow
+   (`.success` on complete, light `.impact` on undo)
 3. CloudKit — deploy schema to Production (CloudKit Console → Schema → Deploy)
 4. Onboarding — brief first-run flow before the app is otherwise empty
 5. Push notifications — APNs entitlement + UNUserNotificationCenter, ask permission after onboarding

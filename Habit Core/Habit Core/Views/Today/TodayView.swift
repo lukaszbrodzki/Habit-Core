@@ -50,6 +50,7 @@ struct TodayView: View {
                         Image(systemName: "plus")
                             .fontWeight(.semibold)
                     }
+                    .accessibilityLabel(String(localized: "addhabit.title.add"))
                 }
             }
             .sheet(isPresented: $showingAddHabit) {

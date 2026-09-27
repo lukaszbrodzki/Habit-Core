@@ -35,6 +35,7 @@ struct CombinedGridSettingsView: View {
                     Button { dismiss() } label: {
                         Image(systemName: "xmark")
                     }
+                    .accessibilityLabel(String(localized: "button.close"))
                 }
             }
         }

@@ -22,6 +22,16 @@ struct HabitTodayRow: View {
             }
             .buttonStyle(.plain)
             .disabled(!habit.canMarkToday)
+            .accessibilityLabel(String(
+                format: NSLocalizedString(
+                    habit.isCompletedToday ? "accessibility.habit.markundone.format" : "accessibility.habit.markdone.format",
+                    comment: ""
+                ),
+                habit.name
+            ))
+            .sensoryFeedback(trigger: habit.isCompletedToday) { _, isCompleted in
+                isCompleted ? .success : .impact(weight: .light)
+            }
 
             // Text
             VStack(alignment: .leading, spacing: 3) {

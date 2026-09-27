@@ -48,12 +48,14 @@ struct AddHabitView: View {
                     Button { dismiss() } label: {
                         Image(systemName: "xmark")
                     }
+                    .accessibilityLabel(String(localized: "button.cancel"))
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(action: save) {
                         Image(systemName: "checkmark")
                     }
                     .disabled(!canSave)
+                    .accessibilityLabel(String(localized: "button.save"))
                 }
             }
             .onAppear(perform: loadExisting)

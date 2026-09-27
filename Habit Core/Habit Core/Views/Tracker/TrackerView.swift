@@ -33,6 +33,7 @@ struct TrackerView: View {
                                         .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel(String(localized: "accessibility.combined.settings"))
                             }
                             combinedStatsRow(grid.stats)
                             grid
@@ -60,6 +61,9 @@ struct TrackerView: View {
                     } label: {
                         Image(systemName: showCombined ? "rectangle.grid.1x2" : "square.grid.3x3")
                     }
+                    .accessibilityLabel(String(localized: showCombined
+                        ? "accessibility.tracker.showindividual"
+                        : "accessibility.tracker.showcombined"))
                 }
             }
             .overlay {
