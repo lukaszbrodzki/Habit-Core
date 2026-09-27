@@ -23,9 +23,14 @@
 4. ~~Onboarding~~ — skipped by decision: empty-state copy in Focus ("No Habits Yet" / "Tap + to add
    your first habit.") already covers the first-run question, a full onboarding flow would be
    overkill for a single-purpose app like this
-5. Push notifications — APNs entitlement + UNUserNotificationCenter, ask permission at a sensible
-   moment (e.g. after the user adds their first habit, not cold on launch)
-   (may need a new `Habit.reminderTime`-style field)
+5. ~~Push notifications~~ — done, as a single global "Daily Reminder" in Settings (not per-habit):
+   `NotificationManager.refreshDailyReminder` schedules one local notification for today only if
+   some active habit still has `canMarkToday && !isCompletedToday`, else cancels it. Recomputed on
+   app launch, habit toggle/add/edit/delete/restore, and reminder setting changes. Permission
+   requested on app launch (per explicit decision, not after first habit). Local-only, no APNs
+   entitlement needed.
+   - **Known limitation**: no repeating/background trigger, so a day the app is never opened won't
+     get that day's reminder (re)scheduled. Revisit with `BGTaskScheduler` if it matters in practice.
 6. Widget (WidgetKit) — home screen widget, needs App Group to share the SwiftData/CloudKit
    container with the main app
 
