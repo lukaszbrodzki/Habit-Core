@@ -19,7 +19,6 @@ struct Habit_CoreApp: App {
 
     init() {
         CloudSyncMonitor.shared.start()
-        NotificationManager.shared.requestAuthorization()
     }
 
     var body: some Scene {
