@@ -49,11 +49,14 @@ struct ContributionGrid: View {
 }
 
 /// Combined grid showing completion rate across all habits.
+/// Wraps into rows (like ContributionGrid) instead of scrolling on its own —
+/// the enclosing TrackerView scroll handles vertical overflow.
 struct CombinedGrid: View {
     let habits: [Habit]
 
     private let size: CGFloat = 13
     private let gap: CGFloat  = 3
+    private let columns = 20
 
     // Last 365 days, oldest first
     private var days: [Date] {
@@ -64,34 +67,26 @@ struct CombinedGrid: View {
             .reversed()
     }
 
-    private var columns: [[Date]] {
-        var cols: [[Date]] = []
-        var col:  [Date]   = []
-        for day in days {
-            col.append(day)
-            if col.count == 7 { cols.append(col); col = [] }
+    private var rows: [[Date]] {
+        stride(from: 0, to: days.count, by: columns).map {
+            Array(days[$0..<min($0 + columns, days.count)])
         }
-        if !col.isEmpty { cols.append(col) }
-        return cols
     }
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(alignment: .top, spacing: gap) {
-                ForEach(columns.indices, id: \.self) { col in
-                    VStack(spacing: gap) {
-                        ForEach(columns[col], id: \.self) { day in
-                            let rate = completionRate(on: day)
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(Color.accentColor.opacity(0.12 + rate * 0.88))
-                                .frame(width: size, height: size)
-                        }
+        VStack(alignment: .leading, spacing: gap) {
+            ForEach(rows.indices, id: \.self) { rowIdx in
+                HStack(spacing: gap) {
+                    ForEach(rows[rowIdx], id: \.self) { day in
+                        let rate = completionRate(on: day)
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.accentColor.opacity(0.12 + rate * 0.88))
+                            .frame(width: size, height: size)
                     }
                 }
             }
-            .padding(.vertical, 2)
         }
-        .defaultScrollAnchor(.trailing)
+        .padding(.vertical, 2)
     }
 
     private func completionRate(on date: Date) -> Double {
