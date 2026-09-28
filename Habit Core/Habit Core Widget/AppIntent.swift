@@ -3,7 +3,7 @@ import AppIntents
 import SwiftData
 
 /// A habit the widget can be configured to show, or the "All Habits" sentinel.
-struct HabitEntity: AppEntity {
+struct HabitEntity: AppEntity, Hashable {
     static let allHabitsID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
 
     let id: UUID
