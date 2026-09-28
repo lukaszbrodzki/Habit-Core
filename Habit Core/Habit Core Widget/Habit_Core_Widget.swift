@@ -52,12 +52,14 @@ struct Provider: AppIntentTimelineProvider {
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         let habits = (try? context.fetch(descriptor)) ?? []
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        let days = (0..<historyDays).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: today) }
 
         if configuration.habit.id == HabitEntity.allHabitsID {
             let colorHex = UserDefaults(suiteName: AppGroup.identifier)?.string(forKey: "combinedGridColorHex") ?? "#4A90D9"
+            guard let earliestStart = habits.map(\.effectiveStart).min() else {
+                return HabitWidgetEntry(date: Date(), mode: .allHabits(colorHex: colorHex, days: []))
+            }
+            let cal = Calendar.current
+            let days = Self.daysWindow(since: earliestStart, maxDays: historyDays)
             let rates = days.map { day -> (date: Date, rate: Double, hadDue: Bool) in
                 let due = habits.filter { habit in
                     guard !habit.isArchived, let p = habit.period(for: day) else { return false }
@@ -75,6 +77,7 @@ struct Provider: AppIntentTimelineProvider {
             guard let habit = habits.first(where: { $0.id == configuration.habit.id }) else {
                 return HabitWidgetEntry(date: Date(), mode: .singleHabit(nil))
             }
+            let days = Self.daysWindow(since: habit.effectiveStart, maxDays: historyDays)
             let recent = days.map { day -> (date: Date, completed: Bool) in
                 let completed = habit.period(for: day).map { habit.isCompleted(in: $0) } ?? false
                 return (day, completed)
@@ -82,6 +85,24 @@ struct Provider: AppIntentTimelineProvider {
             let snap = HabitSnapshot(id: habit.id, name: habit.name, colorHex: habit.colorHex, recentDays: recent)
             return HabitWidgetEntry(date: Date(), mode: .singleHabit(snap))
         }
+    }
+
+    /// Days from `start` (or `maxDays` ago, whichever is later) through today, oldest first —
+    /// mirrors the in-app ContributionGrid/CombinedGrid, which start from the habit's
+    /// `effectiveStart` rather than always showing a fixed-length window.
+    private static func daysWindow(since start: Date, maxDays: Int) -> [Date] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let cutoff = cal.date(byAdding: .day, value: -(maxDays - 1), to: today) ?? today
+        let clampedStart = max(cal.startOfDay(for: start), cutoff)
+        var result: [Date] = []
+        var cursor = clampedStart
+        while cursor <= today {
+            result.append(cursor)
+            guard let next = cal.date(byAdding: .day, value: 1, to: cursor) else { break }
+            cursor = next
+        }
+        return result
     }
 }
 
@@ -164,28 +185,41 @@ private struct SingleHabitGridView: View {
             // Tile size always comes from width alone (guarantees edge-to-edge tiles); if the
             // header leaves less height than `rowCount` rows would need, we drop the oldest rows
             // rather than shrinking every tile and leaving empty side margins.
+            // The grid always renders its full capacity (columns × rows) — if the habit doesn't
+            // have that many real days yet, the oldest slots are neutral placeholders rather than
+            // the grid just being smaller. Real data always ends at the most recent day.
             GeometryReader { geo in
                 let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
                 let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (widthBased + gap))))
-                let visible = Array(habit.recentDays.suffix(columns * maxRows))
-                let gridRows = stride(from: 0, to: visible.count, by: columns).map {
-                    Array(visible[$0..<min($0 + columns, visible.count)])
+                let capacity = columns * maxRows
+                let real = Array(habit.recentDays.suffix(capacity))
+                let padded: [Bool?] = real.map { $0.completed } + Array(repeating: nil, count: max(0, capacity - real.count))
+                let gridRows = stride(from: 0, to: padded.count, by: columns).map {
+                    Array(padded[$0..<min($0 + columns, padded.count)])
                 }
                 VStack(alignment: .leading, spacing: gap) {
                     ForEach(gridRows.indices, id: \.self) { r in
                         HStack(spacing: gap) {
-                            ForEach(gridRows[r], id: \.date) { day in
+                            ForEach(gridRows[r].indices, id: \.self) { c in
                                 RoundedRectangle(cornerRadius: 3)
-                                    .fill(day.completed ? (Color(hex: habit.colorHex) ?? .blue) : Color.secondary.opacity(0.2))
+                                    .fill(tileColor(gridRows[r][c]))
                                     .frame(width: widthBased, height: widthBased)
                             }
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
         .padding(10)
+    }
+
+    /// `nil` = no data yet for that slot, `false` = not completed, `true` = completed.
+    private func tileColor(_ completed: Bool?) -> Color {
+        switch completed {
+        case true:  return Color(hex: habit.colorHex) ?? .blue
+        case false: return Color.secondary.opacity(0.2)
+        case nil:   return Color.secondary.opacity(0.12)
+        }
     }
 
     @ViewBuilder private var header: some View {
@@ -263,25 +297,32 @@ private struct AllHabitsGridView: View {
             GeometryReader { geo in
                 let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
                 let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (widthBased + gap))))
-                let visible = Array(days.suffix(columns * maxRows))
-                let gridRows = stride(from: 0, to: visible.count, by: columns).map {
-                    Array(visible[$0..<min($0 + columns, visible.count)])
+                let capacity = columns * maxRows
+                let real = Array(days.suffix(capacity))
+                let padded: [Double?] = real.map(\.rate) + Array(repeating: nil, count: max(0, capacity - real.count))
+                let gridRows = stride(from: 0, to: padded.count, by: columns).map {
+                    Array(padded[$0..<min($0 + columns, padded.count)])
                 }
                 VStack(alignment: .leading, spacing: gap) {
                     ForEach(gridRows.indices, id: \.self) { r in
                         HStack(spacing: gap) {
-                            ForEach(gridRows[r], id: \.date) { day in
+                            ForEach(gridRows[r].indices, id: \.self) { c in
                                 RoundedRectangle(cornerRadius: 3)
-                                    .fill((Color(hex: colorHex) ?? .accentColor).opacity(0.12 + day.rate * 0.88))
+                                    .fill(tileColor(gridRows[r][c]))
                                     .frame(width: widthBased, height: widthBased)
                             }
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
         }
         .padding(10)
+    }
+
+    /// `nil` = no data yet for that slot; otherwise the day's completion rate.
+    private func tileColor(_ rate: Double?) -> Color {
+        guard let rate else { return Color.secondary.opacity(0.12) }
+        return (Color(hex: colorHex) ?? .accentColor).opacity(0.12 + rate * 0.88)
     }
 
     @ViewBuilder private var header: some View {
