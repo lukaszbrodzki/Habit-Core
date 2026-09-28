@@ -87,7 +87,9 @@ struct Habit_Core_WidgetEntryView: View {
     var entry: Provider.Entry
 
     private var columns: Int { family == .systemSmall ? 6 : 13 }
-    private var rowCount: Int { 6 }
+    // Medium is much wider than tall but not taller than small, so one fewer row keeps
+    // width-based sizing (full-width tiles) from overflowing the available height.
+    private var rowCount: Int { family == .systemSmall ? 6 : 5 }
 
     var body: some View {
         switch entry.mode {
@@ -127,7 +129,9 @@ private struct SingleHabitGridView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let size = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
+            let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
+            let heightBased = (geo.size.height - CGFloat(rowCount - 1) * gap) / CGFloat(rowCount)
+            let size = min(widthBased, heightBased)
             VStack(alignment: .leading, spacing: gap) {
                 ForEach(rows.indices, id: \.self) { r in
                     HStack(spacing: gap) {
@@ -164,7 +168,9 @@ private struct AllHabitsGridView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let size = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
+            let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
+            let heightBased = (geo.size.height - CGFloat(rowCount - 1) * gap) / CGFloat(rowCount)
+            let size = min(widthBased, heightBased)
             VStack(alignment: .leading, spacing: gap) {
                 ForEach(rows.indices, id: \.self) { r in
                     HStack(spacing: gap) {
