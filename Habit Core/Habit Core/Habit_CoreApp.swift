@@ -9,7 +9,13 @@ struct Habit_CoreApp: App {
 
     private let container: ModelContainer = {
         let schema = Schema([Habit.self, HabitEntry.self])
-        let configuration = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
+        guard let groupURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: AppGroup.identifier
+        ) else {
+            fatalError("Could not resolve App Group container — check the App Groups capability")
+        }
+        let storeURL = groupURL.appendingPathComponent("HabitCore.sqlite")
+        let configuration = ModelConfiguration(schema: schema, url: storeURL, cloudKitDatabase: .automatic)
         do {
             return try ModelContainer(for: schema, configurations: [configuration])
         } catch {

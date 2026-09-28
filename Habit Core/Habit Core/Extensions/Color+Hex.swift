@@ -1,5 +1,10 @@
 import SwiftUI
 
+/// Shared between the app and the widget extension targets.
+enum AppGroup {
+    static let identifier = "group.com.lukbro.atomichabits.HabitCore"
+}
+
 extension Color {
     init?(hex: String) {
         var raw = hex.trimmingCharacters(in: .whitespacesAndNewlines)
