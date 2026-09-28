@@ -6,7 +6,6 @@ import SwiftData
 /// `recentDays` covers the last 84 days (enough for the widest widget grid), oldest first.
 struct HabitSnapshot: Identifiable {
     let id: UUID
-    let name: String
     let colorHex: String
     let recentDays: [(date: Date, completed: Bool)]
 }
@@ -77,7 +76,7 @@ struct Provider: AppIntentTimelineProvider {
                 let completed = habit.period(for: day).map { habit.isCompleted(in: $0) } ?? false
                 return (day, completed)
             }
-            let snap = HabitSnapshot(id: habit.id, name: habit.name, colorHex: habit.colorHex, recentDays: recent)
+            let snap = HabitSnapshot(id: habit.id, colorHex: habit.colorHex, recentDays: recent)
             return HabitWidgetEntry(date: Date(), mode: .singleHabit(snap))
         }
     }
@@ -108,13 +107,12 @@ struct Habit_Core_WidgetEntryView: View {
 }
 
 /// Squares in rows, oldest-to-newest left-to-right — same visual language as the in-app
-/// ContributionGrid/CombinedGrid (rounded 3pt-cornered tiles, 3pt gaps).
+/// ContributionGrid/CombinedGrid (rounded corners), sized to always fill the widget's full width.
 private struct SingleHabitGridView: View {
     let habit: HabitSnapshot
     let columns: Int
     let rowCount: Int
 
-    private let size: CGFloat = 12
     private let gap: CGFloat = 3
 
     private var visibleDays: [(date: Date, completed: Bool)] {
@@ -128,11 +126,8 @@ private struct SingleHabitGridView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 5) {
-                Circle().fill(Color(hex: habit.colorHex) ?? .blue).frame(width: 7, height: 7)
-                Text(habit.name).font(.caption2).fontWeight(.semibold).lineLimit(1)
-            }
+        GeometryReader { geo in
+            let size = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
             VStack(alignment: .leading, spacing: gap) {
                 ForEach(rows.indices, id: \.self) { r in
                     HStack(spacing: gap) {
@@ -144,8 +139,8 @@ private struct SingleHabitGridView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
-        .padding()
     }
 }
 
@@ -155,7 +150,6 @@ private struct AllHabitsGridView: View {
     let columns: Int
     let rowCount: Int
 
-    private let size: CGFloat = 12
     private let gap: CGFloat = 3
 
     private var visibleDays: [(date: Date, rate: Double)] {
@@ -169,8 +163,8 @@ private struct AllHabitsGridView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("All Habits").font(.caption2).fontWeight(.semibold)
+        GeometryReader { geo in
+            let size = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
             VStack(alignment: .leading, spacing: gap) {
                 ForEach(rows.indices, id: \.self) { r in
                     HStack(spacing: gap) {
@@ -182,8 +176,8 @@ private struct AllHabitsGridView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         }
-        .padding()
     }
 }
 
