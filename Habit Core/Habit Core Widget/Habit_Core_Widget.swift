@@ -153,17 +153,23 @@ private struct SingleHabitGridView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             header
+            // Tile size always comes from width alone (guarantees edge-to-edge tiles); if the
+            // header leaves less height than `rowCount` rows would need, we drop the oldest rows
+            // rather than shrinking every tile and leaving empty side margins.
             GeometryReader { geo in
                 let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
-                let heightBased = (geo.size.height - CGFloat(rowCount - 1) * gap) / CGFloat(rowCount)
-                let size = min(widthBased, heightBased)
+                let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (widthBased + gap))))
+                let visible = Array(habit.recentDays.suffix(columns * maxRows))
+                let gridRows = stride(from: 0, to: visible.count, by: columns).map {
+                    Array(visible[$0..<min($0 + columns, visible.count)])
+                }
                 VStack(alignment: .leading, spacing: gap) {
-                    ForEach(rows.indices, id: \.self) { r in
+                    ForEach(gridRows.indices, id: \.self) { r in
                         HStack(spacing: gap) {
-                            ForEach(rows[r], id: \.date) { day in
+                            ForEach(gridRows[r], id: \.date) { day in
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(day.completed ? (Color(hex: habit.colorHex) ?? .blue) : Color.secondary.opacity(0.2))
-                                    .frame(width: size, height: size)
+                                    .frame(width: widthBased, height: widthBased)
                             }
                         }
                     }
@@ -176,13 +182,12 @@ private struct SingleHabitGridView: View {
 
     @ViewBuilder private var header: some View {
         if showFullStats {
-            VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 12) {
                 Text(habit.name).font(.caption).fontWeight(.semibold).lineLimit(1)
-                HStack(spacing: 14) {
-                    WidgetStatChip(value: "\(completedCount)/\(visibleDays.count)", label: "Completed")
-                    WidgetStatChip(value: "\(ratePercent)%", label: "Rate")
-                    WidgetStatChip(value: "\(streak)", label: "Streak")
-                }
+                Spacer(minLength: 4)
+                WidgetStatChip(value: "\(completedCount)/\(visibleDays.count)", label: "Completed")
+                WidgetStatChip(value: "\(ratePercent)%", label: "Rate")
+                WidgetStatChip(value: "\(streak)", label: "Streak")
             }
         } else {
             HStack {
@@ -216,28 +221,21 @@ private struct AllHabitsGridView: View {
 
     private let gap: CGFloat = 3
 
-    private var visibleDays: [(date: Date, rate: Double)] {
-        Array(days.suffix(columns * rowCount))
-    }
-
-    private var rows: [[(date: Date, rate: Double)]] {
-        stride(from: 0, to: visibleDays.count, by: columns).map {
-            Array(visibleDays[$0..<min($0 + columns, visibleDays.count)])
-        }
-    }
-
     var body: some View {
         GeometryReader { geo in
             let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
-            let heightBased = (geo.size.height - CGFloat(rowCount - 1) * gap) / CGFloat(rowCount)
-            let size = min(widthBased, heightBased)
+            let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (widthBased + gap))))
+            let visible = Array(days.suffix(columns * maxRows))
+            let gridRows = stride(from: 0, to: visible.count, by: columns).map {
+                Array(visible[$0..<min($0 + columns, visible.count)])
+            }
             VStack(alignment: .leading, spacing: gap) {
-                ForEach(rows.indices, id: \.self) { r in
+                ForEach(gridRows.indices, id: \.self) { r in
                     HStack(spacing: gap) {
-                        ForEach(rows[r], id: \.date) { day in
+                        ForEach(gridRows[r], id: \.date) { day in
                             RoundedRectangle(cornerRadius: 3)
                                 .fill((Color(hex: colorHex) ?? .accentColor).opacity(0.12 + day.rate * 0.88))
-                                .frame(width: size, height: size)
+                                .frame(width: widthBased, height: widthBased)
                         }
                     }
                 }
