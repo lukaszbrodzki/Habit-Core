@@ -28,15 +28,18 @@
    some active habit still has `canMarkToday && !isCompletedToday`, else cancels it. Recomputed on
    app launch, habit toggle/add/edit/delete/restore, and reminder setting changes. Local-only, no
    APNs entitlement needed.
-   - **Real bug found and fixed**: reproducible full-UI freeze on physical iPhone (never reproduced
-     on Simulator). Root cause: `UNUserNotificationCenter.add(_:)`'s non-async path does a
-     synchronous dispatch onto the framework's internal queue, which `removePendingNotification
-     Requests` can still be holding via an in-flight XPC round-trip to `usernotificationsd` — `add()`
-     then deadlocks the calling thread forever. Fixed by switching to the `async throws` APIs
-     (`try await center.add(...)`, `await center.notificationSettings()`) inside `Task { }`, which
-     suspend cooperatively instead of blocking. Also removed the launch-time
-     `requestAuthorization()` call as a secondary precaution — now only asked when the user turns on
-     "Daily Reminder" in Settings. **Still needs confirmation on the physical iPhone.**
+   - **Real root cause, confirmed**: a long freeze/black-screen/crash saga on physical iPhone
+     (never reproduced on Simulator) turned out to be **Xcode 27 beta / iOS 27.2 beta / CoreDevice
+     tooling instability** — DeviceHub itself crashed with an internal AppKit exception during
+     debugging, and even the last known-good commit (pre-dating any notification code) failed to
+     launch on device until both the iPhone and Xcode were restarted. Not an app bug. Restarting
+     phone + Xcode fixed it outright.
+   - Along the way, switched `requestAuthorization`/`refreshAuthorizationStatus`/the `add()` call in
+     `refreshDailyReminder` to the `async throws` UNUserNotificationCenter APIs instead of the
+     completion-handler variants, and moved permission requesting from app launch to only when the
+     user turns on "Daily Reminder" in Settings. Neither was the actual fix for the freeze, but both
+     are worth keeping (the async APIs avoid a real, documented main-thread deadlock class involving
+     `add()` racing `removePendingNotificationRequests`, and asking in context is better UX anyway).
    - **Known limitation**: no repeating/background trigger, so a day the app is never opened won't
      get that day's reminder (re)scheduled. Revisit with `BGTaskScheduler` if it matters in practice.
 6. Widget (WidgetKit) — home screen widget, needs App Group to share the SwiftData/CloudKit
