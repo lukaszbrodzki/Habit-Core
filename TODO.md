@@ -44,8 +44,20 @@
      get that day's reminder (re)scheduled. Revisit with `BGTaskScheduler` if it matters in practice.
    - ~~Verified on physical iPhone~~ — app launches normally and the Daily Reminder toggle actually
      fires a notification. Confirmed 2026-09-28.
-6. Widget (WidgetKit) — home screen widget, needs App Group to share the SwiftData/CloudKit
-   container with the main app
+6. Widget (WidgetKit) — implemented, **needs testing on physical device**:
+   - New "Habit Core WidgetExtension" target, App Group `group.com.lukbro.atomichabits.HabitCore`
+     shared with the main app; `Habit.swift`/`HabitEntry.swift`/`Habit+Period.swift`/`Color+Hex.swift`
+     have dual target membership so the widget can read the same SwiftData models
+   - Small + medium sizes; configurable to a specific habit or "All Habits" via `AppIntentConfiguration`
+   - Interactive complete/undo button (`Button(intent:)`) works without opening the app
+   - Tile color inherits the habit's own color; no separate widget color setting
+   - **Heads up**: `Habit_CoreApp`'s ModelContainer moved from the app's private container to the
+     App Group container (required so the widget can open the same store) — on first launch after
+     this change, SwiftData will see an empty local store at the new location and CloudKit should
+     re-populate it from the private database automatically, but **verify no data appears lost**
+     on the physical device before relying on this.
+   - Not yet done: widget UI strings are hardcoded English, not run through Localizable.xcstrings
+     (would need one more target-membership toggle for the string catalog — low priority)
 
 ## Legal (owned by user — website in progress)
 
