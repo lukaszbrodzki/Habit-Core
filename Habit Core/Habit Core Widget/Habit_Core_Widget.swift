@@ -15,7 +15,9 @@ enum HabitWidgetMode {
     /// `nil` snapshot means the configured habit no longer exists (deleted) or there are none yet.
     case singleHabit(HabitSnapshot?)
     /// Per-day completion rate across all active habits, oldest first, same 84-day window.
-    case allHabits(colorHex: String, days: [(date: Date, rate: Double)])
+    /// `hadDue` distinguishes "nothing was due" (rate 0 but not a failure) from "something was
+    /// due and none of it got done" (also rate 0, but a real miss).
+    case allHabits(colorHex: String, days: [(date: Date, rate: Double, hadDue: Bool)])
 }
 
 struct HabitWidgetEntry: TimelineEntry {
@@ -56,17 +58,17 @@ struct Provider: AppIntentTimelineProvider {
 
         if configuration.habit.id == HabitEntity.allHabitsID {
             let colorHex = UserDefaults(suiteName: AppGroup.identifier)?.string(forKey: "combinedGridColorHex") ?? "#4A90D9"
-            let rates = days.map { day -> (date: Date, rate: Double) in
+            let rates = days.map { day -> (date: Date, rate: Double, hadDue: Bool) in
                 let due = habits.filter { habit in
                     guard !habit.isArchived, let p = habit.period(for: day) else { return false }
                     return cal.isDate(p.end, inSameDayAs: day)
                 }
-                guard !due.isEmpty else { return (day, 0) }
+                guard !due.isEmpty else { return (day, 0, false) }
                 let done = due.filter { habit in
                     guard let p = habit.period(for: day) else { return false }
                     return habit.isCompleted(in: p)
                 }
-                return (day, Double(done.count) / Double(due.count))
+                return (day, Double(done.count) / Double(due.count), true)
             }
             return HabitWidgetEntry(date: Date(), mode: .allHabits(colorHex: colorHex, days: rates))
         } else {
@@ -109,7 +111,13 @@ struct Habit_Core_WidgetEntryView: View {
                     .padding()
             }
         case .allHabits(let colorHex, let days):
-            AllHabitsGridView(colorHex: colorHex, days: days, columns: columns, rowCount: rowCount)
+            AllHabitsGridView(
+                colorHex: colorHex,
+                days: days,
+                columns: columns,
+                rowCount: rowCount,
+                showFullStats: family != .systemSmall
+            )
         }
     }
 }
@@ -213,34 +221,86 @@ private struct WidgetStatChip: View {
     }
 }
 
+/// Same treatment as SingleHabitGridView: full-width tiles, header with stats computed over
+/// exactly the visible window. "Perfect" days include ones with nothing due (nothing to fail),
+/// matching the in-app CombinedGrid.Stats definition.
 private struct AllHabitsGridView: View {
     let colorHex: String
-    let days: [(date: Date, rate: Double)]
+    let days: [(date: Date, rate: Double, hadDue: Bool)]
     let columns: Int
     let rowCount: Int
+    let showFullStats: Bool
 
     private let gap: CGFloat = 3
 
+    private var visibleDays: [(date: Date, rate: Double, hadDue: Bool)] {
+        Array(days.suffix(columns * rowCount))
+    }
+
+    private var dueDaysCount: Int { visibleDays.filter(\.hadDue).count }
+
+    private var perfectCount: Int {
+        visibleDays.filter { !$0.hadDue || $0.rate == 1.0 }.count
+    }
+
+    private var averageRatePercent: Int {
+        let due = visibleDays.filter(\.hadDue)
+        guard !due.isEmpty else { return 0 }
+        return Int(due.map(\.rate).reduce(0, +) / Double(due.count) * 100)
+    }
+
+    private var streak: Int {
+        var longest = 0, current = 0
+        for day in visibleDays {
+            if !day.hadDue || day.rate == 1.0 { current += 1; longest = max(longest, current) } else { current = 0 }
+        }
+        return longest
+    }
+
     var body: some View {
-        GeometryReader { geo in
-            let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
-            let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (widthBased + gap))))
-            let visible = Array(days.suffix(columns * maxRows))
-            let gridRows = stride(from: 0, to: visible.count, by: columns).map {
-                Array(visible[$0..<min($0 + columns, visible.count)])
-            }
-            VStack(alignment: .leading, spacing: gap) {
-                ForEach(gridRows.indices, id: \.self) { r in
-                    HStack(spacing: gap) {
-                        ForEach(gridRows[r], id: \.date) { day in
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill((Color(hex: colorHex) ?? .accentColor).opacity(0.12 + day.rate * 0.88))
-                                .frame(width: widthBased, height: widthBased)
+        VStack(alignment: .leading, spacing: 8) {
+            header
+            GeometryReader { geo in
+                let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
+                let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (widthBased + gap))))
+                let visible = Array(days.suffix(columns * maxRows))
+                let gridRows = stride(from: 0, to: visible.count, by: columns).map {
+                    Array(visible[$0..<min($0 + columns, visible.count)])
+                }
+                VStack(alignment: .leading, spacing: gap) {
+                    ForEach(gridRows.indices, id: \.self) { r in
+                        HStack(spacing: gap) {
+                            ForEach(gridRows[r], id: \.date) { day in
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill((Color(hex: colorHex) ?? .accentColor).opacity(0.12 + day.rate * 0.88))
+                                    .frame(width: widthBased, height: widthBased)
+                            }
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+        .padding(10)
+    }
+
+    @ViewBuilder private var header: some View {
+        if showFullStats {
+            HStack(spacing: 12) {
+                Text("All Habits").font(.caption).fontWeight(.semibold).lineLimit(1)
+                Spacer(minLength: 4)
+                WidgetStatChip(value: "\(perfectCount)/\(dueDaysCount)", label: "Perfect")
+                WidgetStatChip(value: "\(averageRatePercent)%", label: "Rate")
+                WidgetStatChip(value: "\(streak)", label: "Streak")
+            }
+        } else {
+            HStack {
+                Text("All Habits").font(.caption2).fontWeight(.semibold).lineLimit(1)
+                Spacer()
+                Text("\(perfectCount)/\(dueDaysCount)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }
