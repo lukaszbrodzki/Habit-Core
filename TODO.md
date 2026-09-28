@@ -42,6 +42,8 @@
      `add()` racing `removePendingNotificationRequests`, and asking in context is better UX anyway).
    - **Known limitation**: no repeating/background trigger, so a day the app is never opened won't
      get that day's reminder (re)scheduled. Revisit with `BGTaskScheduler` if it matters in practice.
+   - ~~Verified on physical iPhone~~ — app launches normally and the Daily Reminder toggle actually
+     fires a notification. Confirmed 2026-09-28.
 6. Widget (WidgetKit) — home screen widget, needs App Group to share the SwiftData/CloudKit
    container with the main app
 
