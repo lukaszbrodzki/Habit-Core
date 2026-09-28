@@ -6,6 +6,7 @@ import SwiftData
 /// `recentDays` covers the last 84 days (enough for the widest widget grid), oldest first.
 struct HabitSnapshot: Identifiable {
     let id: UUID
+    let name: String
     let colorHex: String
     let recentDays: [(date: Date, completed: Bool)]
 }
@@ -76,7 +77,7 @@ struct Provider: AppIntentTimelineProvider {
                 let completed = habit.period(for: day).map { habit.isCompleted(in: $0) } ?? false
                 return (day, completed)
             }
-            let snap = HabitSnapshot(id: habit.id, colorHex: habit.colorHex, recentDays: recent)
+            let snap = HabitSnapshot(id: habit.id, name: habit.name, colorHex: habit.colorHex, recentDays: recent)
             return HabitWidgetEntry(date: Date(), mode: .singleHabit(snap))
         }
     }
@@ -95,7 +96,12 @@ struct Habit_Core_WidgetEntryView: View {
         switch entry.mode {
         case .singleHabit(let habit):
             if let habit {
-                SingleHabitGridView(habit: habit, columns: columns, rowCount: rowCount)
+                SingleHabitGridView(
+                    habit: habit,
+                    columns: columns,
+                    rowCount: rowCount,
+                    showFullStats: family != .systemSmall
+                )
             } else {
                 Text("No habit selected")
                     .font(.caption)
@@ -110,10 +116,13 @@ struct Habit_Core_WidgetEntryView: View {
 
 /// Squares in rows, oldest-to-newest left-to-right — same visual language as the in-app
 /// ContributionGrid/CombinedGrid (rounded corners), sized to always fill the widget's full width.
+/// Stats (Completed/Rate/Streak) are computed over exactly the visible tile window, not the
+/// habit's full history — they describe what's on screen.
 private struct SingleHabitGridView: View {
     let habit: HabitSnapshot
     let columns: Int
     let rowCount: Int
+    let showFullStats: Bool
 
     private let gap: CGFloat = 3
 
@@ -127,23 +136,74 @@ private struct SingleHabitGridView: View {
         }
     }
 
+    private var completedCount: Int { visibleDays.filter(\.completed).count }
+
+    private var ratePercent: Int {
+        visibleDays.isEmpty ? 0 : Int(Double(completedCount) / Double(visibleDays.count) * 100)
+    }
+
+    private var streak: Int {
+        var longest = 0, current = 0
+        for day in visibleDays {
+            if day.completed { current += 1; longest = max(longest, current) } else { current = 0 }
+        }
+        return longest
+    }
+
     var body: some View {
-        GeometryReader { geo in
-            let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
-            let heightBased = (geo.size.height - CGFloat(rowCount - 1) * gap) / CGFloat(rowCount)
-            let size = min(widthBased, heightBased)
-            VStack(alignment: .leading, spacing: gap) {
-                ForEach(rows.indices, id: \.self) { r in
-                    HStack(spacing: gap) {
-                        ForEach(rows[r], id: \.date) { day in
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(day.completed ? (Color(hex: habit.colorHex) ?? .blue) : Color.secondary.opacity(0.2))
-                                .frame(width: size, height: size)
+        VStack(alignment: .leading, spacing: 8) {
+            header
+            GeometryReader { geo in
+                let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
+                let heightBased = (geo.size.height - CGFloat(rowCount - 1) * gap) / CGFloat(rowCount)
+                let size = min(widthBased, heightBased)
+                VStack(alignment: .leading, spacing: gap) {
+                    ForEach(rows.indices, id: \.self) { r in
+                        HStack(spacing: gap) {
+                            ForEach(rows[r], id: \.date) { day in
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(day.completed ? (Color(hex: habit.colorHex) ?? .blue) : Color.secondary.opacity(0.2))
+                                    .frame(width: size, height: size)
+                            }
                         }
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+        }
+        .padding(10)
+    }
+
+    @ViewBuilder private var header: some View {
+        if showFullStats {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(habit.name).font(.caption).fontWeight(.semibold).lineLimit(1)
+                HStack(spacing: 14) {
+                    WidgetStatChip(value: "\(completedCount)/\(visibleDays.count)", label: "Completed")
+                    WidgetStatChip(value: "\(ratePercent)%", label: "Rate")
+                    WidgetStatChip(value: "\(streak)", label: "Streak")
+                }
+            }
+        } else {
+            HStack {
+                Text(habit.name).font(.caption2).fontWeight(.semibold).lineLimit(1)
+                Spacer()
+                Text("\(completedCount)/\(visibleDays.count)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+private struct WidgetStatChip: View {
+    let value: String
+    let label: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(value).font(.caption).fontWeight(.semibold)
+            Text(label).font(.system(size: 9)).foregroundStyle(.secondary)
         }
     }
 }
