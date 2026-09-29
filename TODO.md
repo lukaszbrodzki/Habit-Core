@@ -49,7 +49,7 @@
      shared with the main app; `Habit.swift`/`HabitEntry.swift`/`Habit+Period.swift`/`Color+Hex.swift`
      have dual target membership so the widget can read the same SwiftData models
    - Small + medium sizes; configurable to a specific habit or "All Habits" via `AppIntentConfiguration`
-   - Interactive complete/undo button (`Button(intent:)`) works without opening the app
+   - No interactive complete/undo button yet (`Button(intent:)` not implemented) — widget is read-only
    - Tile color inherits the habit's own color; no separate widget color setting
    - **Heads up**: `Habit_CoreApp`'s ModelContainer moved from the app's private container to the
      App Group container (required so the widget can open the same store) — on first launch after

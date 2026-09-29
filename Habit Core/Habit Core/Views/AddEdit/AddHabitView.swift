@@ -4,9 +4,16 @@ import SwiftData
 struct AddHabitView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss)      private var dismiss
+    @Environment(NotificationManager.self) private var notifications
 
     /// Non-nil when editing an existing habit.
     var editing: Habit? = nil
+    /// Called instead of deleting in place: the presenter deletes once this sheet is gone, so
+    /// nothing still on screen reads a deleted model mid-dismiss animation. If a presenter doesn't
+    /// provide it, the sheet falls back to deleting on its own so "Delete" never silently no-ops —
+    /// but `dismiss()` doesn't wait for the animation, so that fallback lacks the protection above.
+    /// New presenters should pass this (and delete in their `onDismiss`), like TrackerView.
+    var onDelete: ((Habit) -> Void)? = nil
 
     // MARK: - Form state
 
@@ -96,22 +103,7 @@ struct AddHabitView: View {
 
     private var colorSection: some View {
         Section(String(localized: "addhabit.section.color")) {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 10) {
-                ForEach(Color.habitColorHexes, id: \.self) { hex in
-                    Circle()
-                        .fill(Color(hex: hex) ?? .blue)
-                        .frame(width: 40, height: 40)
-                        .overlay {
-                            if hex == colorHex {
-                                Image(systemName: "checkmark")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(.white)
-                            }
-                        }
-                        .onTapGesture { colorHex = hex }
-                }
-            }
-            .padding(.vertical, 6)
+            ColorSwatchPicker(selection: $colorHex)
         }
     }
 
@@ -191,6 +183,9 @@ struct AddHabitView: View {
 
     private var dangerSection: some View {
         Section {
+            Button(String(localized: "habit.archive.button")) {
+                archiveHabit()
+            }
             Button(String(localized: "habit.reset.button"), role: .destructive) {
                 showResetConfirm = true
             }
@@ -232,33 +227,41 @@ struct AddHabitView: View {
         habit.weekDay         = weekDay
         habit.monthDay        = monthDay
         habit.hasStartDate    = hasStartDate
-        habit.startDate       = hasStartDate ? startDate : nil
+        // DatePicker(.date) keeps the time-of-day it was initialised with; store whole days.
+        let cal = Calendar.current
+        habit.startDate       = hasStartDate ? cal.startOfDay(for: startDate) : nil
         habit.hasEndDate      = hasEndDate
-        habit.endDate         = hasEndDate ? endDate : nil
+        habit.endDate         = hasEndDate ? cal.startOfDay(for: endDate) : nil
 
-        try? modelContext.save()
-        NotificationManager.shared.refreshDailyReminder(context: modelContext)
+        actions.commit()
+        dismiss()
+    }
+
+    private var actions: HabitActions {
+        HabitActions(context: modelContext, notifications: notifications)
+    }
+
+    private func archiveHabit() {
+        guard let habit = editing else { return }
+        actions.archive(habit)
         dismiss()
     }
 
     private func resetHabit() {
         guard let habit = editing else { return }
-        habit.entries?.forEach { modelContext.delete($0) }
-        habit.entries?.removeAll()
-        habit.createdAt = Date()
-        habit.hasStartDate = false
-        habit.startDate = nil
-        try? modelContext.save()
-        NotificationManager.shared.refreshDailyReminder(context: modelContext)
+        actions.reset(habit)
         dismiss()
     }
 
     private func deleteHabit() {
         guard let habit = editing else { return }
-        modelContext.delete(habit)
-        try? modelContext.save()
-        NotificationManager.shared.refreshDailyReminder(context: modelContext)
-        dismiss()
+        if let onDelete {
+            onDelete(habit)
+            dismiss()
+        } else {
+            dismiss()
+            actions.delete(habit)
+        }
     }
 
     private func ordinal(_ n: Int) -> String {

@@ -6,19 +6,13 @@ struct Habit_CoreApp: App {
     @State private var theme = AppTheme.shared
     @State private var syncMonitor = CloudSyncMonitor.shared
     @State private var notifications = NotificationManager.shared
+    @State private var reminders = ReminderSettings.shared
 
     private let container: ModelContainer = {
-        let schema = Schema([Habit.self, HabitEntry.self])
-        guard let groupURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: AppGroup.identifier
-        ) else {
-            fatalError("Could not resolve App Group container — check the App Groups capability")
-        }
-        let storeURL = groupURL.appendingPathComponent("HabitCore.sqlite")
-        let configuration = ModelConfiguration(schema: schema, url: storeURL, cloudKitDatabase: .automatic)
         do {
-            return try ModelContainer(for: schema, configurations: [configuration])
+            return try SharedStore.makeContainer()
         } catch {
+            // Unrecoverable misconfiguration (missing App Group capability or schema mismatch).
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
@@ -33,6 +27,7 @@ struct Habit_CoreApp: App {
                 .environment(theme)
                 .environment(syncMonitor)
                 .environment(notifications)
+                .environment(reminders)
                 .preferredColorScheme(theme.colorScheme)
         }
         .modelContainer(container)

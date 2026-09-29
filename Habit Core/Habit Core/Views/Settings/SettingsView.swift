@@ -6,7 +6,8 @@ struct SettingsView: View {
     @Environment(AppTheme.self) private var theme
     @Environment(CloudSyncMonitor.self) private var syncMonitor
     @Environment(NotificationManager.self) private var notifications
-    @Environment(\.scenePhase) private var scenePhase
+    @Environment(ReminderSettings.self) private var reminders
+    @Environment(\.modelContext) private var modelContext
     @Query(
         filter: #Predicate<Habit> { !$0.isArchived },
         sort: [SortDescriptor(\Habit.sortOrder)]
@@ -40,12 +41,12 @@ struct SettingsView: View {
                             }
                         }
                     } else {
-                        @Bindable var t = theme
-                        Toggle(String(localized: "settings.reminder.toggle"), isOn: $t.reminderEnabled)
-                        if t.reminderEnabled {
+                        @Bindable var r = reminders
+                        Toggle(String(localized: "settings.reminder.toggle"), isOn: $r.isEnabled)
+                        if r.isEnabled {
                             DatePicker(
                                 String(localized: "settings.reminder.time"),
-                                selection: $t.reminderTime,
+                                selection: $r.time,
                                 displayedComponents: .hourAndMinute
                             )
                         }
@@ -102,19 +103,15 @@ struct SettingsView: View {
             .sheet(isPresented: $showReorder) {
                 ReorderHabitsView(habits: habits)
             }
-            .onChange(of: theme.reminderEnabled) { _, enabled in
+            .onChange(of: reminders.isEnabled) { _, enabled in
                 if enabled && notifications.authorizationStatus == .notDetermined {
-                    NotificationManager.shared.requestAuthorization()
+                    notifications.requestAuthorization(thenRefresh: modelContext)
+                } else {
+                    notifications.refreshDailyReminder(habits: habits)
                 }
-                NotificationManager.shared.refreshDailyReminder(habits: habits)
             }
-            .onChange(of: theme.reminderTime) {
-                NotificationManager.shared.refreshDailyReminder(habits: habits)
-            }
-            .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .active {
-                    NotificationManager.shared.refreshAuthorizationStatus()
-                }
+            .onChange(of: reminders.time) {
+                notifications.refreshDailyReminder(habits: habits)
             }
         }
     }

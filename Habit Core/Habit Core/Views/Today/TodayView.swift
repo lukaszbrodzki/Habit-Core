@@ -8,6 +8,9 @@ struct TodayView: View {
     )
     private var habits: [Habit]
 
+    @Environment(\.modelContext) private var modelContext
+    @Environment(NotificationManager.self) private var notifications
+
     @State private var showingAddHabit = false
 
     private var sorted: [Habit] {
@@ -36,6 +39,14 @@ struct TodayView: View {
                             .listRowSeparator(.hidden)
                             .listRowBackground(Color.clear)
                             .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                            .swipeActions(edge: .trailing) {
+                                Button {
+                                    HabitActions(context: modelContext, notifications: notifications).archive(habit)
+                                } label: {
+                                    Label(String(localized: "button.archive"), systemImage: "archivebox")
+                                }
+                                .tint(.orange)
+                            }
                     }
                     .listStyle(.plain)
                 }
@@ -55,9 +66,6 @@ struct TodayView: View {
             }
             .sheet(isPresented: $showingAddHabit) {
                 AddHabitView()
-            }
-            .onAppear {
-                NotificationManager.shared.refreshDailyReminder(habits: habits)
             }
         }
     }

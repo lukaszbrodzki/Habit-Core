@@ -2,8 +2,9 @@ import SwiftUI
 import SwiftData
 
 struct HabitTodayRow: View {
-    @Bindable var habit: Habit
+    let habit: Habit
     @Environment(\.modelContext) private var modelContext
+    @Environment(NotificationManager.self) private var notifications
 
     private var accentColor: Color {
         Color(hex: habit.colorHex) ?? .blue
@@ -63,35 +64,13 @@ struct HabitTodayRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+        .cardBackground(cornerRadius: 14)
         .opacity(habit.canMarkToday || habit.isCompletedToday ? 1 : 0.45)
     }
 
     // MARK: - Actions
 
     private func toggleCompletion() {
-        guard habit.canMarkToday else { return }
-
-        if habit.isCompletedToday {
-            // Remove the entry for the current period
-            if let p = habit.period(for: Date()),
-               let entry = habit.entries?.first(where: {
-                   $0.isCompleted && $0.periodStart >= p.start && $0.periodStart <= p.end
-               }) {
-                modelContext.delete(entry)
-            }
-        } else {
-            if let p = habit.period(for: Date()) {
-                let entry = HabitEntry(periodStart: p.start, periodEnd: p.end, habit: habit)
-                entry.isCompleted = true
-                entry.completedAt = Date()
-                modelContext.insert(entry)
-                habit.entries?.append(entry)
-            }
-        }
-
-        try? modelContext.save()
-        NotificationManager.shared.refreshDailyReminder(context: modelContext)
+        HabitActions(context: modelContext, notifications: notifications).toggleCompletion(of: habit)
     }
 }

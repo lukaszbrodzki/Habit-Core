@@ -1,8 +1,15 @@
 import SwiftUI
 
-/// Shared between the app and the widget extension targets.
-enum AppGroup {
+/// Shared between the app and the widget extension targets. `nonisolated` because the app target
+/// defaults to MainActor isolation, and these constants are read from SwiftData model defaults.
+nonisolated enum AppGroup {
     static let identifier = "group.com.lukbro.atomichabits.HabitCore"
+}
+
+/// Keys/defaults read by both the app and the widget — one definition so they can't drift apart.
+nonisolated enum SharedDefaults {
+    static let combinedGridColorHexKey = "combinedGridColorHex"
+    static let defaultColorHex = "#4A90D9"
 }
 
 extension Color {

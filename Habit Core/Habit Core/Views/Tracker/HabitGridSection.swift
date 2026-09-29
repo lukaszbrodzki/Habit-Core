@@ -4,16 +4,17 @@ struct HabitGridSection: View {
     let habit: Habit
     let onEdit: () -> Void
 
-    private var periods: [Habit.Period] { habit.allPeriods() }
-
     var body: some View {
+        // Computed once per body pass, then shared by the grid and the stats row.
+        let periods = Array(habit.allPeriods().reversed())   // oldest first
+        let completions = HabitStats.completions(of: habit, in: periods)
+        let summary = HabitStats.summary(of: completions)
+
         VStack(alignment: .leading, spacing: 10) {
             // Header
             HStack(alignment: .top) {
                 HStack(spacing: 8) {
-                    Circle()
-                        .fill(Color(hex: habit.colorHex) ?? .blue)
-                        .frame(width: 10, height: 10)
+                    HabitColorDot(colorHex: habit.colorHex)
                         .padding(.top, 4)
 
                     VStack(alignment: .leading, spacing: 2) {
@@ -52,37 +53,23 @@ struct HabitGridSection: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
-                ContributionGrid(habit: habit, periods: periods)
+                ContributionGrid(
+                    periods: periods,
+                    completions: completions,
+                    color: Color(hex: habit.colorHex) ?? .accentColor
+                )
             }
 
-            // Stats row
-            statsRow
+            HStack {
+                StatsRow(items: [
+                    .init(value: "\(summary.completed)/\(summary.total)", label: String(localized: "tracker.stat.completed")),
+                    .init(value: "\(summary.ratePercent)%", label: String(localized: "tracker.stat.rate")),
+                    .init(value: "\(summary.streak)", label: String(localized: "tracker.stat.streak")),
+                ])
+                Spacer()
+            }
         }
         .padding(14)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
-        .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
-    }
-
-    private var statsRow: some View {
-        let total     = periods.count
-        let completed = periods.filter { habit.isCompleted(in: $0) }.count
-        let pct       = total > 0 ? Int(Double(completed) / Double(total) * 100) : 0
-        let streak    = habit.longestStreak(in: periods)
-
-        return HStack(spacing: 16) {
-            StatChip(
-                value: "\(completed)/\(total)",
-                label: String(localized: "tracker.stat.completed")
-            )
-            StatChip(
-                value: "\(pct)%",
-                label: String(localized: "tracker.stat.rate")
-            )
-            StatChip(
-                value: "\(streak)",
-                label: String(localized: "tracker.stat.streak")
-            )
-            Spacer()
-        }
+        .cardBackground()
     }
 }

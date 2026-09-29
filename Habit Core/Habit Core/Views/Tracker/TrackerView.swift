@@ -8,17 +8,24 @@ struct TrackerView: View {
     )
     private var habits: [Habit]
 
+    @Environment(AppTheme.self) private var theme
+
     @State private var showCombined = false
     @State private var showCombinedSettings = false
     @State private var habitToEdit: Habit?
+    @State private var habitPendingDeletion: Habit?
+
+    @Environment(\.modelContext) private var modelContext
+    @Environment(NotificationManager.self) private var notifications
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 14) {
                     if showCombined {
-                        // Combined view
-                        let grid = CombinedGrid(habits: habits)
+                        // Combined view — days computed once, shared by the grid and the stats.
+                        let days = combinedDays
+                        let stats = HabitStats.summary(of: days)
                         VStack(alignment: .leading, spacing: 10) {
                             HStack(alignment: .top) {
                                 Text(String(localized: "tracker.combined.title"))
@@ -35,11 +42,19 @@ struct TrackerView: View {
                                 .buttonStyle(.plain)
                                 .accessibilityLabel(String(localized: "accessibility.combined.settings"))
                             }
-                            combinedStatsRow(grid.stats)
-                            grid
+                            HStack {
+                                StatsRow(items: [
+                                    .init(value: "\(stats.perfectDays)/\(stats.totalDays)",
+                                          label: String(localized: "tracker.stat.perfectdays")),
+                                    .init(value: "\(stats.ratePercent)%", label: String(localized: "tracker.stat.rate")),
+                                    .init(value: "\(stats.streak)", label: String(localized: "tracker.stat.streak")),
+                                ])
+                                Spacer()
+                            }
+                            CombinedGrid(days: days, color: Color(hex: theme.combinedGridColorHex) ?? .accentColor)
                         }
                         .padding(14)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                        .cardBackground()
                         .padding(.horizontal)
                     } else {
                         ForEach(habits) { habit in
@@ -75,8 +90,8 @@ struct TrackerView: View {
                     )
                 }
             }
-            .sheet(item: $habitToEdit) { habit in
-                AddHabitView(editing: habit)
+            .sheet(item: $habitToEdit, onDismiss: deletePendingHabit) { habit in
+                AddHabitView(editing: habit) { habitPendingDeletion = $0 }
             }
             .sheet(isPresented: $showCombinedSettings) {
                 CombinedGridSettingsView()
@@ -84,21 +99,18 @@ struct TrackerView: View {
         }
     }
 
-    private func combinedStatsRow(_ stats: CombinedGrid.Stats) -> some View {
-        HStack(spacing: 16) {
-            StatChip(
-                value: "\(stats.perfectDays)/\(stats.totalDays)",
-                label: String(localized: "tracker.stat.perfectdays")
-            )
-            StatChip(
-                value: "\(stats.ratePercent)%",
-                label: String(localized: "tracker.stat.rate")
-            )
-            StatChip(
-                value: "\(stats.streak)",
-                label: String(localized: "tracker.stat.streak")
-            )
-            Spacer()
-        }
+    private func deletePendingHabit() {
+        guard let habit = habitPendingDeletion else { return }
+        habitPendingDeletion = nil
+        HabitActions(context: modelContext, notifications: notifications).delete(habit)
+    }
+
+    /// Every day since the oldest active habit started (capped at 1 year), oldest first.
+    private var combinedDays: [HabitStats.Day] {
+        guard let earliest = habits.map(\.effectiveStart).min() else { return [] }
+        let today = Date()
+        let cutoff = Calendar.current.date(byAdding: .year, value: -1, to: today) ?? today
+        let window = HabitStats.dayWindow(since: earliest, notBefore: cutoff, through: today)
+        return HabitStats.combinedDays(habits: habits, days: window)
     }
 }

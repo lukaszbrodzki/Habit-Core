@@ -3,21 +3,19 @@ import SwiftUI
 import SwiftData
 
 /// Plain-value snapshot of a Habit, safe to hold after the fetching ModelContext goes away.
-/// `recentDays` covers the last 84 days (enough for the widest widget grid), oldest first.
+/// `recentPeriods` is one flag per period (same tiles as the in-app ContributionGrid), oldest first.
 struct HabitSnapshot: Identifiable {
     let id: UUID
     let name: String
     let colorHex: String
-    let recentDays: [(date: Date, completed: Bool)]
+    let recentPeriods: [Bool]
 }
 
 enum HabitWidgetMode {
     /// `nil` snapshot means the configured habit no longer exists (deleted) or there are none yet.
     case singleHabit(HabitSnapshot?)
-    /// Per-day completion rate across all active habits, oldest first, same 84-day window.
-    /// `hadDue` distinguishes "nothing was due" (rate 0 but not a failure) from "something was
-    /// due and none of it got done" (also rate 0, but a real miss).
-    case allHabits(colorHex: String, days: [(date: Date, rate: Double, hadDue: Bool)])
+    /// Per-day completion across all active habits, oldest first.
+    case allHabits(colorHex: String, days: [HabitStats.Day])
 }
 
 struct HabitWidgetEntry: TimelineEntry {
@@ -25,7 +23,8 @@ struct HabitWidgetEntry: TimelineEntry {
     let mode: HabitWidgetMode
 }
 
-private let historyDays = 84
+/// Enough history for the widest widget grid (13 × 5 tiles), with headroom.
+private let historyTiles = 84
 
 struct Provider: AppIntentTimelineProvider {
     func placeholder(in context: Context) -> HabitWidgetEntry {
@@ -54,55 +53,29 @@ struct Provider: AppIntentTimelineProvider {
         let habits = (try? context.fetch(descriptor)) ?? []
 
         if configuration.habit.id == HabitEntity.allHabitsID {
-            let colorHex = UserDefaults(suiteName: AppGroup.identifier)?.string(forKey: "combinedGridColorHex") ?? "#4A90D9"
+            let colorHex = UserDefaults(suiteName: AppGroup.identifier)?.string(forKey: SharedDefaults.combinedGridColorHexKey)
+                ?? SharedDefaults.defaultColorHex
             guard let earliestStart = habits.map(\.effectiveStart).min() else {
                 return HabitWidgetEntry(date: Date(), mode: .allHabits(colorHex: colorHex, days: []))
             }
-            let cal = Calendar.current
-            let days = Self.daysWindow(since: earliestStart, maxDays: historyDays)
-            let rates = days.map { day -> (date: Date, rate: Double, hadDue: Bool) in
-                let due = habits.filter { habit in
-                    guard !habit.isArchived, let p = habit.period(for: day) else { return false }
-                    return cal.isDate(p.end, inSameDayAs: day)
-                }
-                guard !due.isEmpty else { return (day, 0, false) }
-                let done = due.filter { habit in
-                    guard let p = habit.period(for: day) else { return false }
-                    return habit.isCompleted(in: p)
-                }
-                return (day, Double(done.count) / Double(due.count), true)
-            }
-            return HabitWidgetEntry(date: Date(), mode: .allHabits(colorHex: colorHex, days: rates))
+            let today = Date()
+            let cutoff = Calendar.current.date(byAdding: .day, value: -(historyTiles - 1), to: today) ?? today
+            let window = HabitStats.dayWindow(since: earliestStart, notBefore: cutoff, through: today)
+            let days = HabitStats.combinedDays(habits: habits, days: window)
+            return HabitWidgetEntry(date: Date(), mode: .allHabits(colorHex: colorHex, days: days))
         } else {
             guard let habit = habits.first(where: { $0.id == configuration.habit.id }) else {
                 return HabitWidgetEntry(date: Date(), mode: .singleHabit(nil))
             }
-            let days = Self.daysWindow(since: habit.effectiveStart, maxDays: historyDays)
-            let recent = days.map { day -> (date: Date, completed: Bool) in
-                let completed = habit.period(for: day).map { habit.isCompleted(in: $0) } ?? false
-                return (day, completed)
-            }
-            let snap = HabitSnapshot(id: habit.id, name: habit.name, colorHex: habit.colorHex, recentDays: recent)
+            let periods = Array(habit.allPeriods().prefix(historyTiles).reversed())   // oldest first
+            let snap = HabitSnapshot(
+                id: habit.id,
+                name: habit.name,
+                colorHex: habit.colorHex,
+                recentPeriods: HabitStats.completions(of: habit, in: periods)
+            )
             return HabitWidgetEntry(date: Date(), mode: .singleHabit(snap))
         }
-    }
-
-    /// Days from `start` (or `maxDays` ago, whichever is later) through today, oldest first —
-    /// mirrors the in-app ContributionGrid/CombinedGrid, which start from the habit's
-    /// `effectiveStart` rather than always showing a fixed-length window.
-    private static func daysWindow(since start: Date, maxDays: Int) -> [Date] {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        let cutoff = cal.date(byAdding: .day, value: -(maxDays - 1), to: today) ?? today
-        let clampedStart = max(cal.startOfDay(for: start), cutoff)
-        var result: [Date] = []
-        var cursor = clampedStart
-        while cursor <= today {
-            result.append(cursor)
-            guard let next = cal.date(byAdding: .day, value: 1, to: cursor) else { break }
-            cursor = next
-        }
-        return result
     }
 }
 
@@ -114,233 +87,98 @@ struct Habit_Core_WidgetEntryView: View {
     // Medium is much wider than tall but not taller than small, so one fewer row keeps
     // width-based sizing (full-width tiles) from overflowing the available height.
     private var rowCount: Int { family == .systemSmall ? 6 : 5 }
+    private var showFullStats: Bool { family != .systemSmall }
 
     var body: some View {
         switch entry.mode {
         case .singleHabit(let habit):
             if let habit {
-                SingleHabitGridView(
-                    habit: habit,
+                // Stats describe exactly the visible tile window, not the habit's full history.
+                let visible = Array(habit.recentPeriods.suffix(columns * rowCount))
+                let summary = HabitStats.summary(of: visible)
+                let color = Color(hex: habit.colorHex) ?? .blue
+                WidgetGridCard(
+                    title: habit.name,
+                    stats: [
+                        .init(value: "\(summary.completed)/\(summary.total)", label: String(localized: "tracker.stat.completed")),
+                        .init(value: "\(summary.ratePercent)%", label: String(localized: "tracker.stat.rate")),
+                        .init(value: "\(summary.streak)", label: String(localized: "widget.stat.streak")),
+                    ],
+                    cells: visible.map { HeatmapPalette.completion($0, color: color) },
                     columns: columns,
                     rowCount: rowCount,
-                    showFullStats: family != .systemSmall
+                    showFullStats: showFullStats
                 )
             } else {
-                Text("No habit selected")
+                Text(String(localized: "widget.noselection"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .padding()
             }
         case .allHabits(let colorHex, let days):
-            AllHabitsGridView(
-                colorHex: colorHex,
-                days: days,
+            let visible = Array(days.suffix(columns * rowCount))
+            let summary = HabitStats.summary(of: visible)
+            let color = Color(hex: colorHex) ?? .accentColor
+            WidgetGridCard(
+                title: String(localized: "tracker.combined.title"),
+                stats: [
+                    .init(value: "\(summary.perfectDays)/\(summary.totalDays)", label: String(localized: "widget.stat.perfect")),
+                    .init(value: "\(summary.ratePercent)%", label: String(localized: "tracker.stat.rate")),
+                    .init(value: "\(summary.streak)", label: String(localized: "widget.stat.streak")),
+                ],
+                cells: visible.map { HeatmapPalette.rate($0.rate, color: color) },
                 columns: columns,
                 rowCount: rowCount,
-                showFullStats: family != .systemSmall
+                showFullStats: showFullStats
             )
         }
     }
 }
 
-/// Squares in rows, oldest-to-newest left-to-right — same visual language as the in-app
-/// ContributionGrid/CombinedGrid (rounded corners), sized to always fill the widget's full width.
-/// Stats (Completed/Rate/Streak) are computed over exactly the visible tile window, not the
-/// habit's full history — they describe what's on screen.
-private struct SingleHabitGridView: View {
-    let habit: HabitSnapshot
+/// Header + full-width heatmap. Tile size always comes from width alone (edge-to-edge tiles);
+/// if the header leaves less height than `rowCount` rows need, the oldest rows are dropped rather
+/// than shrinking every tile. The grid always renders its full capacity: real tiles come first
+/// (most recent last), any remaining slots are neutral placeholders.
+private struct WidgetGridCard: View {
+    let title: String
+    let stats: [StatsRow.Item]
+    let cells: [Color]
     let columns: Int
     let rowCount: Int
     let showFullStats: Bool
-
-    private let gap: CGFloat = 3
-
-    private var visibleDays: [(date: Date, completed: Bool)] {
-        Array(habit.recentDays.suffix(columns * rowCount))
-    }
-
-    private var rows: [[(date: Date, completed: Bool)]] {
-        stride(from: 0, to: visibleDays.count, by: columns).map {
-            Array(visibleDays[$0..<min($0 + columns, visibleDays.count)])
-        }
-    }
-
-    private var completedCount: Int { visibleDays.filter(\.completed).count }
-
-    private var ratePercent: Int {
-        visibleDays.isEmpty ? 0 : Int(Double(completedCount) / Double(visibleDays.count) * 100)
-    }
-
-    private var streak: Int {
-        var longest = 0, current = 0
-        for day in visibleDays {
-            if day.completed { current += 1; longest = max(longest, current) } else { current = 0 }
-        }
-        return longest
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            header
-            // Tile size always comes from width alone (guarantees edge-to-edge tiles); if the
-            // header leaves less height than `rowCount` rows would need, we drop the oldest rows
-            // rather than shrinking every tile and leaving empty side margins.
-            // The grid always renders its full capacity (columns × rows) — if the habit doesn't
-            // have that many real days yet, the oldest slots are neutral placeholders rather than
-            // the grid just being smaller. Real data always ends at the most recent day.
-            GeometryReader { geo in
-                let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
-                let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (widthBased + gap))))
-                let capacity = columns * maxRows
-                let real = Array(habit.recentDays.suffix(capacity))
-                let padded: [Bool?] = real.map { $0.completed } + Array(repeating: nil, count: max(0, capacity - real.count))
-                let gridRows = stride(from: 0, to: padded.count, by: columns).map {
-                    Array(padded[$0..<min($0 + columns, padded.count)])
-                }
-                VStack(alignment: .leading, spacing: gap) {
-                    ForEach(gridRows.indices, id: \.self) { r in
-                        HStack(spacing: gap) {
-                            ForEach(gridRows[r].indices, id: \.self) { c in
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(tileColor(gridRows[r][c]))
-                                    .frame(width: widthBased, height: widthBased)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .padding(10)
-    }
-
-    /// `nil` = no data yet for that slot, `false` = not completed, `true` = completed.
-    private func tileColor(_ completed: Bool?) -> Color {
-        switch completed {
-        case true:  return Color(hex: habit.colorHex) ?? .blue
-        case false: return Color.secondary.opacity(0.2)
-        case nil:   return Color.secondary.opacity(0.12)
-        }
-    }
-
-    @ViewBuilder private var header: some View {
-        if showFullStats {
-            HStack(spacing: 12) {
-                Text(habit.name).font(.caption).fontWeight(.semibold).lineLimit(1)
-                Spacer(minLength: 4)
-                WidgetStatChip(value: "\(completedCount)/\(visibleDays.count)", label: "Completed")
-                WidgetStatChip(value: "\(ratePercent)%", label: "Rate")
-                WidgetStatChip(value: "\(streak)", label: "Streak")
-            }
-        } else {
-            HStack {
-                Text(habit.name).font(.caption2).fontWeight(.semibold).lineLimit(1)
-                Spacer()
-                Text("\(completedCount)/\(visibleDays.count)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-        }
-    }
-}
-
-private struct WidgetStatChip: View {
-    let value: String
-    let label: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(value).font(.caption).fontWeight(.semibold)
-            Text(label).font(.system(size: 9)).foregroundStyle(.secondary)
-        }
-    }
-}
-
-/// Same treatment as SingleHabitGridView: full-width tiles, header with stats computed over
-/// exactly the visible window. "Perfect" days include ones with nothing due (nothing to fail),
-/// matching the in-app CombinedGrid.Stats definition.
-private struct AllHabitsGridView: View {
-    let colorHex: String
-    let days: [(date: Date, rate: Double, hadDue: Bool)]
-    let columns: Int
-    let rowCount: Int
-    let showFullStats: Bool
-
-    private let gap: CGFloat = 3
-
-    private var visibleDays: [(date: Date, rate: Double, hadDue: Bool)] {
-        Array(days.suffix(columns * rowCount))
-    }
-
-    private var dueDaysCount: Int { visibleDays.filter(\.hadDue).count }
-
-    private var perfectCount: Int {
-        visibleDays.filter { !$0.hadDue || $0.rate == 1.0 }.count
-    }
-
-    private var averageRatePercent: Int {
-        let due = visibleDays.filter(\.hadDue)
-        guard !due.isEmpty else { return 0 }
-        return Int(due.map(\.rate).reduce(0, +) / Double(due.count) * 100)
-    }
-
-    private var streak: Int {
-        var longest = 0, current = 0
-        for day in visibleDays {
-            if !day.hadDue || day.rate == 1.0 { current += 1; longest = max(longest, current) } else { current = 0 }
-        }
-        return longest
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             header
             GeometryReader { geo in
-                let widthBased = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
-                let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (widthBased + gap))))
+                let gap = HeatmapPalette.gap
+                let tile = (geo.size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)
+                let maxRows = max(1, min(rowCount, Int((geo.size.height + gap) / (tile + gap))))
                 let capacity = columns * maxRows
-                let real = Array(days.suffix(capacity))
-                let padded: [Double?] = real.map(\.rate) + Array(repeating: nil, count: max(0, capacity - real.count))
-                let gridRows = stride(from: 0, to: padded.count, by: columns).map {
-                    Array(padded[$0..<min($0 + columns, padded.count)])
-                }
-                VStack(alignment: .leading, spacing: gap) {
-                    ForEach(gridRows.indices, id: \.self) { r in
-                        HStack(spacing: gap) {
-                            ForEach(gridRows[r].indices, id: \.self) { c in
-                                RoundedRectangle(cornerRadius: 3)
-                                    .fill(tileColor(gridRows[r][c]))
-                                    .frame(width: widthBased, height: widthBased)
-                            }
-                        }
-                    }
-                }
+                let real = Array(cells.suffix(capacity))
+                let padded = real + Array(repeating: HeatmapPalette.empty, count: max(0, capacity - real.count))
+                HeatmapGrid(cells: padded, columns: columns, tileSize: tile)
             }
         }
         .padding(10)
     }
 
-    /// `nil` = no data yet for that slot; otherwise the day's completion rate.
-    private func tileColor(_ rate: Double?) -> Color {
-        guard let rate else { return Color.secondary.opacity(0.12) }
-        return (Color(hex: colorHex) ?? .accentColor).opacity(0.12 + rate * 0.88)
-    }
-
     @ViewBuilder private var header: some View {
         if showFullStats {
             HStack(spacing: 12) {
-                Text("All Habits").font(.caption).fontWeight(.semibold).lineLimit(1)
+                Text(title).font(.caption).fontWeight(.semibold).lineLimit(1)
                 Spacer(minLength: 4)
-                WidgetStatChip(value: "\(perfectCount)/\(dueDaysCount)", label: "Perfect")
-                WidgetStatChip(value: "\(averageRatePercent)%", label: "Rate")
-                WidgetStatChip(value: "\(streak)", label: "Streak")
+                StatsRow(items: stats, style: .compact, spacing: 12)
             }
         } else {
             HStack {
-                Text("All Habits").font(.caption2).fontWeight(.semibold).lineLimit(1)
+                Text(title).font(.caption2).fontWeight(.semibold).lineLimit(1)
                 Spacer()
-                Text("\(perfectCount)/\(dueDaysCount)")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                if let first = stats.first {
+                    Text(first.value)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }
@@ -354,8 +192,8 @@ struct Habit_Core_Widget: Widget {
             Habit_Core_WidgetEntryView(entry: entry)
                 .containerBackground(.fill.tertiary, for: .widget)
         }
-        .configurationDisplayName("Habit")
-        .description("See a habit's recent history, or all of them, from your Home Screen.")
+        .configurationDisplayName(Text("widget.name"))
+        .description(Text("widget.description"))
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

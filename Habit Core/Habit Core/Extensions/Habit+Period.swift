@@ -85,10 +85,12 @@ extension Habit {
             let origin = cal.startOfDay(for: effectiveStart)
             let today  = cal.startOfDay(for: date)
             let diff   = cal.dateComponents([.day], from: origin, to: today).day ?? 0
-            let idx    = diff / customDays
+            // Guard against 0 arriving via CloudKit sync (the UI only allows 2...90).
+            let length = max(1, customDays)
+            let idx    = diff / length
             guard
-                let pStart   = cal.date(byAdding: .day, value:  idx      * customDays, to: origin),
-                let pLastDay = cal.date(byAdding: .day, value: (idx + 1) * customDays - 1, to: origin),
+                let pStart   = cal.date(byAdding: .day, value:  idx      * length, to: origin),
+                let pLastDay = cal.date(byAdding: .day, value: (idx + 1) * length - 1, to: origin),
                 let pEnd     = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: pLastDay))?
                     .addingTimeInterval(-1)
             else { return nil }
@@ -133,10 +135,28 @@ extension Habit {
 
     var canMarkToday: Bool {
         guard !isArchived else { return false }
-        if Date() < effectiveStart { return false }
-        if hasEndDate, let ed = endDate, Date() > ed { return false }
+        // Day-granular, same as `isDue(on:)` — start/end dates are calendar days, not instants.
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        if today < cal.startOfDay(for: effectiveStart) { return false }
+        if hasEndDate, let ed = endDate, today > cal.startOfDay(for: ed) { return false }
         guard let p = period(for: Date()) else { return false }
         return Date() <= p.end
+    }
+
+    /// Whether this habit's deadline (the end of its current period) falls exactly on `date`.
+    /// Shared by the app's combined grid/stats (ContributionGrid.swift) and the widget
+    /// (Habit_Core_Widget.swift) so "what's due on a given day" has one definition —
+    /// day-granular, and bounded by `effectiveStart`/`endDate` so not-yet-started or
+    /// already-ended habits never count.
+    func isDue(on date: Date) -> Bool {
+        guard !isArchived else { return false }
+        let cal = Calendar.current
+        guard cal.startOfDay(for: date) >= cal.startOfDay(for: effectiveStart) else { return false }
+        if hasEndDate, let ed = endDate,
+           cal.startOfDay(for: date) > cal.startOfDay(for: ed) { return false }
+        guard let p = period(for: date) else { return false }
+        return cal.isDate(p.end, inSameDayAs: date)
     }
 
     var isCompletedToday: Bool {
@@ -145,7 +165,12 @@ extension Habit {
     }
 
     func isCompleted(in period: Period) -> Bool {
-        (entries ?? []).contains {
+        completedEntry(in: period) != nil
+    }
+
+    /// The completed entry whose `periodStart` falls inside `period`, if any.
+    func completedEntry(in period: Period) -> HabitEntry? {
+        (entries ?? []).first {
             $0.isCompleted && $0.periodStart >= period.start && $0.periodStart <= period.end
         }
     }
@@ -158,21 +183,6 @@ extension Habit {
             return period(for: effectiveStart)?.end
         }
         return period(for: now)?.end
-    }
-
-    /// Longest consecutive streak of completed periods (chronological order).
-    func longestStreak(in periods: [Period]) -> Int {
-        var longest = 0
-        var current = 0
-        for period in periods.reversed() {   // reversed = oldest first
-            if isCompleted(in: period) {
-                current += 1
-                if current > longest { longest = current }
-            } else {
-                current = 0
-            }
-        }
-        return longest
     }
 
     /// Sort key for Today view: 0 = due & incomplete, 1 = not due, 2 = completed.

@@ -19,7 +19,7 @@ final class Habit {
     var id: UUID = UUID()
     var name: String = ""
     var habitDescription: String = ""
-    var colorHex: String = "#4A90D9"
+    var colorHex: String = SharedDefaults.defaultColorHex
     /// Stored as raw string for CloudKit compatibility
     var frequencyRaw: String = FrequencyType.daily.rawValue
     /// For .custom: repeat every N days
@@ -51,7 +51,7 @@ final class Habit {
     init(
         name: String = "",
         habitDescription: String = "",
-        colorHex: String = "#4A90D9",
+        colorHex: String = SharedDefaults.defaultColorHex,
         frequency: FrequencyType = .daily,
         customDays: Int = 2,
         weekDay: Int = 2,

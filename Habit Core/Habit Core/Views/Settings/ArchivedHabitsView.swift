@@ -6,6 +6,7 @@ struct ArchivedHabitsView: View {
     private var archived: [Habit]
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(NotificationManager.self) private var notifications
     @Environment(\.dismiss)      private var dismiss
 
     var body: some View {
@@ -33,29 +34,27 @@ struct ArchivedHabitsView: View {
         }
     }
 
+    private var actions: HabitActions {
+        HabitActions(context: modelContext, notifications: notifications)
+    }
+
     private func row(for habit: Habit) -> some View {
         HStack {
-            Circle()
-                .fill(Color(hex: habit.colorHex) ?? .blue)
-                .frame(width: 10, height: 10)
+            HabitColorDot(colorHex: habit.colorHex)
 
             Text(habit.name)
 
             Spacer()
 
             Button(String(localized: "settings.restore")) {
-                habit.isArchived = false
-                try? modelContext.save()
-                NotificationManager.shared.refreshDailyReminder(context: modelContext)
+                actions.restore(habit)
             }
             .foregroundStyle(Color.accentColor)
             .buttonStyle(.borderless)
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
-                modelContext.delete(habit)
-                try? modelContext.save()
-                NotificationManager.shared.refreshDailyReminder(context: modelContext)
+                actions.delete(habit)
             } label: {
                 Label(String(localized: "button.delete"), systemImage: "trash")
             }

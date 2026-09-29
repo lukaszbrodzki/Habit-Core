@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- 5x5 contribution-grid tiles: square=130, gap=20, margin=147, rx=28 -->
+
+  <!-- Row 0 (y=147) -->
+  <rect x="147" y="147" width="130" height="130" rx="28" fill="#FFFFFF" fill-opacity="0.10"/>
+  <rect x="297" y="147" width="130" height="130" rx="28" fill="#1ABC9C" fill-opacity="0.55"/>
+  <rect x="447" y="147" width="130" height="130" rx="28" fill="#FFFFFF" fill-opacity="0.10"/>
+  <rect x="597" y="147" width="130" height="130" rx="28" fill="#E91E63" fill-opacity="0.40"/>
+  <rect x="747" y="147" width="130" height="130" rx="28" fill="#FFFFFF" fill-opacity="0.10"/>
+
+  <!-- Row 1 (y=297) -->
+  <rect x="147" y="297" width="130" height="130" rx="28" fill="#4A90D9" fill-opacity="0.50"/>
+  <rect x="297" y="297" width="130" height="130" rx="28" fill="#4A90D9" fill-opacity="1.0"/>
+  <rect x="447" y="297" width="130" height="130" rx="28" fill="#1ABC9C" fill-opacity="0.85"/>
+  <rect x="597" y="297" width="130" height="130" rx="28" fill="#E91E63" fill-opacity="0.80"/>
+  <rect x="747" y="297" width="130" height="130" rx="28" fill="#E91E63" fill-opacity="1.0"/>
+
+  <!-- Row 2 (y=447) -->
+  <rect x="147" y="447" width="130" height="130" rx="28" fill="#FFFFFF" fill-opacity="0.10"/>
+  <rect x="297" y="447" width="130" height="130" rx="28" fill="#27AE60" fill-opacity="0.60"/>
+  <rect x="447" y="447" width="130" height="130" rx="28" fill="#E67E22" fill-opacity="0.85"/>
+  <rect x="597" y="447" width="130" height="130" rx="28" fill="#E67E22" fill-opacity="1.0"/>
+  <rect x="747" y="447" width="130" height="130" rx="28" fill="#FFFFFF" fill-opacity="0.10"/>
+
+  <!-- Row 3 (y=597) -->
+  <rect x="147" y="597" width="130" height="130" rx="28" fill="#9B59B6" fill-opacity="0.45"/>
+  <rect x="297" y="597" width="130" height="130" rx="28" fill="#9B59B6" fill-opacity="0.90"/>
+  <rect x="447" y="597" width="130" height="130" rx="28" fill="#27AE60" fill-opacity="1.0"/>
+  <rect x="597" y="597" width="130" height="130" rx="28" fill="#F39C12" fill-opacity="0.50"/>
+  <rect x="747" y="597" width="130" height="130" rx="28" fill="#F39C12" fill-opacity="1.0"/>
+
+  <!-- Row 4 (y=747) -->
+  <rect x="147" y="747" width="130" height="130" rx="28" fill="#FFFFFF" fill-opacity="0.10"/>
+  <rect x="297" y="747" width="130" height="130" rx="28" fill="#9B59B6" fill-opacity="1.0"/>
+  <rect x="447" y="747" width="130" height="130" rx="28" fill="#FFFFFF" fill-opacity="0.10"/>
+  <rect x="597" y="747" width="130" height="130" rx="28" fill="#F39C12" fill-opacity="0.80"/>
+  <rect x="747" y="747" width="130" height="130" rx="28" fill="#4A90D9" fill-opacity="0.35"/>
+</svg>

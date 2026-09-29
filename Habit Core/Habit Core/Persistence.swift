@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 
 // MARK: - App-wide theme state
 
@@ -26,30 +27,46 @@ final class AppTheme {
     /// Accent color for the Tracker's combined "All Habits" heatmap (also used by the widget).
     var combinedGridColorHex: String {
         didSet {
-            Self.defaults.set(combinedGridColorHex, forKey: "combinedGridColorHex")
-        }
-    }
-
-    /// Single daily reminder, sent only if some habit is still due when it fires.
-    var reminderEnabled: Bool {
-        didSet {
-            Self.defaults.set(reminderEnabled, forKey: "reminderEnabled")
-        }
-    }
-
-    /// Only the time-of-day components are used.
-    var reminderTime: Date {
-        didSet {
-            Self.defaults.set(reminderTime, forKey: "reminderTime")
+            Self.defaults.set(combinedGridColorHex, forKey: SharedDefaults.combinedGridColorHexKey)
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 
     private init() {
         let raw = Self.defaults.string(forKey: "colorSchemePreference") ?? ""
         preference = ColorSchemePreference(rawValue: raw) ?? .system
-        combinedGridColorHex = Self.defaults.string(forKey: "combinedGridColorHex") ?? "#4A90D9"
-        reminderEnabled = Self.defaults.bool(forKey: "reminderEnabled")
-        reminderTime = Self.defaults.object(forKey: "reminderTime") as? Date
+        combinedGridColorHex = Self.defaults.string(forKey: SharedDefaults.combinedGridColorHexKey)
+            ?? SharedDefaults.defaultColorHex
+    }
+}
+
+// MARK: - Daily reminder settings
+
+/// Kept apart from `AppTheme` — appearance and reminders change for unrelated reasons.
+/// Same UserDefaults keys as before the split, so existing settings carry over.
+@Observable
+final class ReminderSettings {
+    static let shared = ReminderSettings()
+
+    private static let defaults = UserDefaults(suiteName: AppGroup.identifier) ?? .standard
+
+    /// Single daily reminder, sent only if some habit is still due when it fires.
+    var isEnabled: Bool {
+        didSet {
+            Self.defaults.set(isEnabled, forKey: "reminderEnabled")
+        }
+    }
+
+    /// Only the time-of-day components are used.
+    var time: Date {
+        didSet {
+            Self.defaults.set(time, forKey: "reminderTime")
+        }
+    }
+
+    private init() {
+        isEnabled = Self.defaults.bool(forKey: "reminderEnabled")
+        time = Self.defaults.object(forKey: "reminderTime") as? Date
             ?? Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
     }
 }

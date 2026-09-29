@@ -11,6 +11,9 @@ final class TabNavigationUITests: XCTestCase {
     @MainActor
     func testTapsSwitchTabs() throws {
         let app = XCUIApplication()
+        // Navigation titles below are matched by their English text — pin the language so the
+        // test doesn't depend on the simulator's locale (the app is also localized to Polish).
+        app.launchArguments += ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
 
         let tabBar = app.tabBars.firstMatch

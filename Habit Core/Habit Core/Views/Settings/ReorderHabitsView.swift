@@ -5,6 +5,7 @@ struct ReorderHabitsView: View {
     var habits: [Habit]
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(NotificationManager.self) private var notifications
     @Environment(\.dismiss)      private var dismiss
 
     @State private var ordered: [Habit] = []
@@ -14,9 +15,7 @@ struct ReorderHabitsView: View {
             List {
                 ForEach(ordered) { habit in
                     HStack(spacing: 10) {
-                        Circle()
-                            .fill(Color(hex: habit.colorHex) ?? .blue)
-                            .frame(width: 10, height: 10)
+                        HabitColorDot(colorHex: habit.colorHex)
                         Text(habit.name)
                         Spacer()
                         Image(systemName: "line.3.horizontal")
@@ -44,6 +43,6 @@ struct ReorderHabitsView: View {
         for (idx, habit) in ordered.enumerated() {
             habit.sortOrder = idx
         }
-        try? modelContext.save()
+        HabitActions(context: modelContext, notifications: notifications).commit()
     }
 }

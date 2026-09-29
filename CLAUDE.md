@@ -25,11 +25,11 @@ No linter or external package dependencies (pure Apple frameworks).
 
 ## Architecture
 
-**Stack**: SwiftUI + SwiftData + CloudKit (private iCloud sync), iOS 26.2+.
+**Stack**: SwiftUI + SwiftData + CloudKit (private iCloud sync), iOS 26.2+, Swift 6 language mode (app target defaults to MainActor isolation).
 **Localization**: String Catalogs (`Localizable.xcstrings`), languages: `en`, `pl`.
 
 ### Entry point
-`Habit_CoreApp.swift` — `@main` app struct. Provides a `.modelContainer(for: [Habit.self, HabitEntry.self], cloudKitDatabase: .automatic)` and injects the `AppTheme` `@Observable` singleton via `.environment(theme)`.
+`Habit_CoreApp.swift` — `@main` app struct. Builds a `ModelContainer` whose SQLite store lives in the App Group container (`HabitCore.sqlite`, shared with the widget) with `ModelConfiguration(..., cloudKitDatabase: .automatic)` (via `SharedStore`), and injects the `AppTheme`, `ReminderSettings`, `CloudSyncMonitor` and `NotificationManager` `@Observable` singletons via `.environment(...)`.
 
 ### Data models (SwiftData)
 - **`Models/Habit.swift`** — `@Model` with `id`, `name`, `habitDescription`, `colorHex`, `frequencyRaw` (String backing `FrequencyType` enum), `customDays`, `weekDay`, `monthDay`, `endDate`, `hasEndDate`, `isArchived`, `sortOrder`, `createdAt`, and a cascade-delete `entries: [HabitEntry]` relationship.
@@ -40,10 +40,17 @@ No linter or external package dependencies (pure Apple frameworks).
 `Extensions/Habit+Period.swift` — all period/deadline calculation lives here:
 - `period(for:)` — returns `Period(start:end:)` for the habit's current period relative to a given date. Handles all four `FrequencyType` cases.
 - `allPeriods(upTo:)` — returns periods newest-first, capped at 1 year / 400 iterations (used by the tracker grid).
-- `canMarkToday`, `isCompletedToday`, `isCompleted(in:)`, `dueDate`, `todaySortPriority` — derived state used by views.
+- `canMarkToday`, `isCompletedToday`, `isCompleted(in:)`, `completedEntry(in:)`, `isDue(on:)`, `dueDate`, `todaySortPriority` — derived state used by views.
+
+`Shared/` — files with **dual target membership** (app + widget; listed in the widget's membership exceptions in `project.pbxproj`):
+- `HabitStats.swift` — all grid/stat math (day windows, per-period completions, combined daily rates, summaries/streaks) + `CompletionIndex`. Never re-implement these in a view or the widget.
+- `HeatmapGrid.swift` (+ `HeatmapPalette`), `StatsRow.swift` (`StatChip`, `StatsRow`) — shared UI.
+- `SharedStore.swift` — the one `ModelContainer` factory (schema, App Group URL, file name).
+
+`Services/HabitActions.swift` — every habit mutation (toggle, archive/restore, reset, delete, commit after add/edit/reorder): saves, logs failures via `Logger`, refreshes the reminder. Views must not call `modelContext.save()` directly.
 
 ### App-wide theme
-`Persistence.swift` contains `AppTheme` (`@Observable` singleton) and `ColorSchemePreference` enum. Stored in `UserDefaults`.
+`Persistence.swift` contains `AppTheme` (appearance + combined grid color), `ReminderSettings` (daily reminder toggle/time) — both `@Observable` singletons injected via environment — and the `ColorSchemePreference` enum. Stored in the App Group `UserDefaults` suite.
 
 ### Views
 ```
@@ -60,11 +67,13 @@ Views/
     ArchivedHabitsView.swift — Restore or permanently delete archived habits
     ReorderHabitsView.swift  — Drag-to-reorder list; updates Habit.sortOrder
   AddEdit/
-    AddHabitView.swift       — Sheet for add (editing=nil) and edit (editing=habit)
+    AddHabitView.swift       — Sheet for add (editing=nil) and edit (editing=habit); archive/reset/delete
+  Components/
+    HabitColorDot, ColorSwatchPicker, CardBackground (`.cardBackground()` — the one card style)
 ```
 
 ### Color helpers
-`Extensions/Color+Hex.swift` — `Color(hex:)` initializer and `Color.habitColorHexes` palette (10 preset hex strings).
+`Extensions/Color+Hex.swift` — `Color(hex:)` initializer, `Color.habitColorHexes` palette (15 preset hex strings), plus `AppGroup` and `SharedDefaults` constants shared with the widget.
 
 ### Navigation
 `ContentView.swift` — `TabView` with three `Tab {}` items (iOS 18 API): Today, Tracker, Settings. Each tab root uses `NavigationStack`.
@@ -74,6 +83,11 @@ Views/
 - All SwiftData model properties must have defaults or be optional (already the case).
 - Only private CloudKit database is supported with SwiftData.
 
+### Reminders
+`NotificationManager.swift` — one local daily reminder (no APNs), re-evaluated when the app becomes active and after every habit mutation; fires only if something is still due.
+
+### Widget
+`Habit Core Widget/` — WidgetKit extension (small + medium), configurable to one habit or "All Habits". Reads the shared App Group store via `WidgetModelStore`; the app reloads its timelines on every `ModelContext.didSave` (see `ContentView.swift`).
+
 ## Next phases (not yet implemented)
-1. Push notifications (requires APNs entitlement + UNUserNotificationCenter setup, then AppStore Connect config).
-2. Home Screen & Lock Screen widgets (WidgetKit target).
+1. Lock Screen widgets and an interactive (`Button(intent:)`) complete/undo in the widget.

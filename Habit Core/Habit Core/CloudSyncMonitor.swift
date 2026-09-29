@@ -9,7 +9,7 @@ final class CloudSyncMonitor {
 
     enum Status: Equatable {
         case idle
-        case syncing(String)
+        case syncing
         case success
         case failed(String)
     }
@@ -30,23 +30,17 @@ final class CloudSyncMonitor {
                 NSPersistentCloudKitContainer.eventNotificationUserInfoKey
             ] as? NSPersistentCloudKitContainer.Event else { return }
 
-            let label: String
-            switch event.type {
-            case .setup:  label = "Setting up iCloud sync"
-            case .import: label = "Downloading from iCloud"
-            case .export: label = "Uploading to iCloud"
-            @unknown default: label = "Syncing"
+            // Delivered on `.main` (see `queue:` above), so hopping onto the MainActor-isolated
+            // state is safe — `assumeIsolated` makes that explicit instead of relying on it silently.
+            MainActor.assumeIsolated {
+                if event.endDate == nil {
+                    self?.status = .syncing
+                } else if let error = event.error {
+                    self?.status = .failed(error.localizedDescription)
+                } else {
+                    self?.status = event.succeeded ? .success : .idle
+                }
             }
-
-            if event.endDate == nil {
-                self?.status = .syncing(label)
-                return
-            }
-            if let error = event.error {
-                self?.status = .failed(error.localizedDescription)
-                return
-            }
-            self?.status = event.succeeded ? .success : .idle
         }
     }
 }

@@ -10,11 +10,11 @@ struct HabitEntity: AppEntity, Hashable {
     let name: String
     let colorHex: String
 
-    static var typeDisplayRepresentation: TypeDisplayRepresentation { "Habit" }
-    static var defaultQuery = HabitEntityQuery()
+    static var typeDisplayRepresentation: TypeDisplayRepresentation { TypeDisplayRepresentation(name: "intent.habit.title") }
+    static let defaultQuery = HabitEntityQuery()
 
     static var allHabits: HabitEntity {
-        HabitEntity(id: allHabitsID, name: "All Habits", colorHex: "#4A90D9")
+        HabitEntity(id: allHabitsID, name: String(localized: "tracker.combined.title"), colorHex: SharedDefaults.defaultColorHex)
     }
 
     var displayRepresentation: DisplayRepresentation {
@@ -48,9 +48,9 @@ struct HabitEntityQuery: EntityQuery {
 }
 
 struct ConfigurationAppIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource { "Habit" }
-    static var description: IntentDescription { "Choose a habit to show, or All Habits." }
+    static var title: LocalizedStringResource { "intent.habit.title" }
+    static var description: IntentDescription { IntentDescription("intent.description") }
 
-    @Parameter(title: "Habit", default: HabitEntity.allHabits)
+    @Parameter(title: "intent.habit.title", default: HabitEntity.allHabits)
     var habit: HabitEntity
 }
