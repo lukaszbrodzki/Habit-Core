@@ -23,6 +23,14 @@ xcodebuild test -project "Habit Core/Habit Core.xcodeproj" -scheme "Habit Core" 
 
 No linter or external package dependencies (pure Apple frameworks).
 
+## Branches (same workflow as WalletLog)
+
+- `main` — only versions released to users. Updated solely by merging `acceptance` (`--no-ff`) at release time, then tagged with the version (e.g. `1.0`).
+- `acceptance` — what gets archived and uploaded to App Store Connect / TestFlight. Receives working branches via `--no-ff` merges.
+- Working branches — one per version/feature, named `<version>-<feature>` (e.g. `1.1.0-lockscreen-widgets`), branched from `acceptance`.
+
+Never commit directly to `main` or `acceptance`. Bump `CURRENT_PROJECT_VERSION` before each TestFlight upload.
+
 ## Architecture
 
 **Stack**: SwiftUI + SwiftData + CloudKit (private iCloud sync), iOS 26.2+, Swift 6 language mode (app target defaults to MainActor isolation).
