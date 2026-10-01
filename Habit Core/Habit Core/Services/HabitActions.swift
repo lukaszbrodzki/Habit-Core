@@ -9,7 +9,7 @@ struct HabitActions {
     let context: ModelContext
     var notifications: NotificationManager = .shared
 
-    private static let logger = Logger(subsystem: "com.lukbro.atomichabits.Habit-Core", category: "persistence")
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.lukbro.atomichabits", category: "persistence")
 
     /// Marks the current period done, or undoes it if it's already done.
     func toggleCompletion(of habit: Habit, now: Date = Date()) {
