@@ -105,12 +105,7 @@ struct TrackerView: View {
         HabitActions(context: modelContext, notifications: notifications).delete(habit)
     }
 
-    /// Every day since the oldest active habit started (capped at 1 year), oldest first.
     private var combinedDays: [HabitStats.Day] {
-        guard let earliest = habits.map(\.effectiveStart).min() else { return [] }
-        let today = Date()
-        let cutoff = Calendar.current.date(byAdding: .year, value: -1, to: today) ?? today
-        let window = HabitStats.dayWindow(since: earliest, notBefore: cutoff, through: today)
-        return HabitStats.combinedDays(habits: habits, days: window)
+        HabitStats.allHabitsDays(habits: habits, range: .lastYear)
     }
 }

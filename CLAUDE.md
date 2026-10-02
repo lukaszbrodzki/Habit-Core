@@ -51,7 +51,7 @@ Never commit directly to `main` or `acceptance`. Bump `CURRENT_PROJECT_VERSION` 
 - `canMarkToday`, `isCompletedToday`, `isCompleted(in:)`, `completedEntry(in:)`, `isDue(on:)`, `dueDate`, `todaySortPriority` — derived state used by views.
 
 `Shared/` — files with **dual target membership** (app + widget; listed in the widget's membership exceptions in `project.pbxproj`):
-- `HabitStats.swift` — all grid/stat math (day windows, per-period completions, combined daily rates, summaries/streaks) + `CompletionIndex`. Never re-implement these in a view or the widget.
+- `HabitStats.swift` — all grid/stat math (`allHabitsDays(habits:range:)` is the one "All Habits" series for Tracker `.lastYear` and widget `.lastDays(84)`; day windows, per-period completions, combined daily rates, summaries/streaks) + `CompletionIndex`. Never re-implement these in a view or the widget.
 - `HeatmapGrid.swift` (+ `HeatmapPalette`), `StatsRow.swift` (`StatChip`, `StatsRow`) — shared UI.
 - `SharedStore.swift` — the one `ModelContainer` factory (schema, App Group URL, file name).
 

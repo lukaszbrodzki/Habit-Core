@@ -55,13 +55,7 @@ struct Provider: AppIntentTimelineProvider {
         if configuration.habit.id == HabitEntity.allHabitsID {
             let colorHex = UserDefaults(suiteName: AppGroup.identifier)?.string(forKey: SharedDefaults.combinedGridColorHexKey)
                 ?? SharedDefaults.defaultColorHex
-            guard let earliestStart = habits.map(\.effectiveStart).min() else {
-                return HabitWidgetEntry(date: Date(), mode: .allHabits(colorHex: colorHex, days: []))
-            }
-            let today = Date()
-            let cutoff = Calendar.current.date(byAdding: .day, value: -(historyTiles - 1), to: today) ?? today
-            let window = HabitStats.dayWindow(since: earliestStart, notBefore: cutoff, through: today)
-            let days = HabitStats.combinedDays(habits: habits, days: window)
+            let days = HabitStats.allHabitsDays(habits: habits, range: .lastDays(historyTiles))
             return HabitWidgetEntry(date: Date(), mode: .allHabits(colorHex: colorHex, days: days))
         } else {
             guard let habit = habits.first(where: { $0.id == configuration.habit.id }) else {

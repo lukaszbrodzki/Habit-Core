@@ -62,6 +62,32 @@ enum HabitStats {
         var isPerfect: Bool { !hadDue || rate == 1 }
     }
 
+    /// How far back the "All Habits" series may reach.
+    enum Range: Equatable {
+        /// The Tracker's combined grid: one calendar year back from today.
+        case lastYear
+        /// The widget: the last N days including today.
+        case lastDays(Int)
+
+        func cutoff(from today: Date) -> Date {
+            let cal = Calendar.current
+            switch self {
+            case .lastYear:          return cal.date(byAdding: .year, value: -1, to: today) ?? today
+            case .lastDays(let n):   return cal.date(byAdding: .day, value: -(max(1, n) - 1), to: today) ?? today
+            }
+        }
+    }
+
+    /// The "All Habits" series used by both the Tracker and the widget: one `Day` per calendar day
+    /// from the earliest start among the *active* habits through `today`, clamped to `range`.
+    /// Archived habits are ignored entirely (they neither extend the window nor count as due).
+    static func allHabitsDays(habits: [Habit], range: Range, today: Date = Date()) -> [Day] {
+        let active = habits.filter { !$0.isArchived }
+        guard let earliest = active.map(\.effectiveStart).min() else { return [] }
+        let window = dayWindow(since: earliest, notBefore: range.cutoff(from: today), through: today)
+        return combinedDays(habits: active, days: window)
+    }
+
     static func combinedDays(habits: [Habit], days: [Date]) -> [Day] {
         let indexed = habits.map { ($0, CompletionIndex(habit: $0)) }
         return days.map { day in
