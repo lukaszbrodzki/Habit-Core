@@ -40,8 +40,16 @@ struct Provider: AppIntentTimelineProvider {
 
     func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<HabitWidgetEntry> {
         let entry = makeEntry(configuration: configuration)
-        let nextRefresh = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date().addingTimeInterval(1800)
-        return Timeline(entries: [entry], policy: .after(nextRefresh))
+        return Timeline(entries: [entry], policy: .after(Self.nextRefresh(after: Date())))
+    }
+
+    /// Every 30 minutes, but never later than the coming midnight — otherwise the widget could keep
+    /// showing yesterday as "today" until the next periodic refresh.
+    static func nextRefresh(after now: Date) -> Date {
+        let cal = Calendar.current
+        let periodic = cal.date(byAdding: .minute, value: 30, to: now) ?? now.addingTimeInterval(1800)
+        guard let tomorrow = cal.date(byAdding: .day, value: 1, to: now) else { return periodic }
+        return min(periodic, cal.startOfDay(for: tomorrow))
     }
 
     private func makeEntry(configuration: ConfigurationAppIntent) -> HabitWidgetEntry {
