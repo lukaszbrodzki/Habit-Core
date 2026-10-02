@@ -448,22 +448,6 @@
         }
       }
     },
-    "color.amber" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Amber"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bursztynowy"
-          }
-        }
-      }
-    },
     "color.blue" : {
       "localizations" : {
         "en" : {
@@ -476,22 +460,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Niebieski"
-          }
-        }
-      }
-    },
-    "color.bluegrey" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blue Grey"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szaroniebieski"
           }
         }
       }
@@ -512,38 +480,6 @@
         }
       }
     },
-    "color.cobalt" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cobalt"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kobaltowy"
-          }
-        }
-      }
-    },
-    "color.cyan" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cyan"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cyjan"
-          }
-        }
-      }
-    },
     "color.green" : {
       "localizations" : {
         "en" : {
@@ -556,22 +492,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zielony"
-          }
-        }
-      }
-    },
-    "color.indigo" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indigo"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indygo"
           }
         }
       }
@@ -636,22 +556,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fioletowy"
-          }
-        }
-      }
-    },
-    "color.raspberry" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Raspberry"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Malinowy"
           }
         }
       }
@@ -1948,6 +1852,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gdy włączysz tę opcję w Ustawieniach, wszystko tutaj obejmuje tylko ostatnie N dni."
+          }
+        }
+      }
+    },
+    "color.gold" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gold"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Złoty"
+          }
+        }
+      }
+    },
+    "color.sky" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sky"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Błękitny"
+          }
+        }
+      }
+    },
+    "color.navy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Navy"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Granatowy"
+          }
+        }
+      }
+    },
+    "color.lavender" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lavender"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lawendowy"
+          }
+        }
+      }
+    },
+    "color.magenta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Magenta"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amarantowy"
+          }
+        }
+      }
+    },
+    "color.graphite" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graphite"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grafitowy"
           }
         }
       }

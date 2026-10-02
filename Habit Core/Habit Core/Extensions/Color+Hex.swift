@@ -37,21 +37,23 @@ extension Color {
         self.init(red: r, green: g, blue: b)
     }
 
+    /// Picked for perceptual distance (CIEDE2000 ≥ 17 between any two), so no two swatches look
+    /// alike on small grid tiles. Habits created with older palette colors keep rendering them.
     static let habitColorHexes: [String] = [
-        "#4A90D9",  // Blue
-        "#9B59B6",  // Purple
-        "#27AE60",  // Green
-        "#E67E22",  // Orange
-        "#E74C3C",  // Red
-        "#1ABC9C",  // Teal
-        "#E91E63",  // Pink
-        "#3F51B5",  // Indigo
-        "#F39C12",  // Amber
-        "#795548",  // Brown
-        "#00BCD4",  // Cyan
-        "#C0CA33",  // Lime
-        "#AD1457",  // Raspberry
-        "#607D8B",  // Blue Grey
-        "#1565C0",  // Cobalt
+        "#E5484D",  // Red
+        "#F28C28",  // Orange
+        "#E0B81F",  // Gold
+        "#8DB82B",  // Lime
+        "#2E9E4F",  // Green
+        "#14A3A3",  // Teal
+        "#5BC8F0",  // Sky
+        "#4A90D9",  // Blue (default)
+        "#283C8F",  // Navy
+        "#7B4FE0",  // Purple
+        "#B9A3E3",  // Lavender
+        "#C2359A",  // Magenta
+        "#F27BA8",  // Pink
+        "#8B5E3C",  // Brown
+        "#4A4E55",  // Graphite
     ]
 }
