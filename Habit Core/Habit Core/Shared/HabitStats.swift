@@ -100,17 +100,35 @@ enum HabitStats {
         return days
     }
 
+    /// Per-day completion across `habits` for each of `days` (calendar-day starts, oldest first).
+    ///
+    /// A habit counts on a day exactly when that day is the deadline (last day) of one of its
+    /// periods, within its start/end dates — the same rule as `Habit.isDue(on:)`. Walking each
+    /// habit's periods instead of asking `isDue` for every day × habit keeps this cheap (a weekly
+    /// habit has ~52 periods a year, not 365 day checks), which matters on long histories.
     static func combinedDays(habits: [Habit], days: [Date]) -> [Day] {
-        let indexed = habits.map { ($0, CompletionIndex(habit: $0)) }
-        return days.map { day in
-            var dueCount = 0
-            var doneCount = 0
-            for (habit, index) in indexed where habit.isDue(on: day) {
-                dueCount += 1
-                if let p = habit.period(for: day), index.contains(p) { doneCount += 1 }
+        guard let first = days.min(), let last = days.max() else { return [] }
+        let cal = Calendar.current
+        let windowEnd = cal.date(byAdding: .day, value: 1, to: last)?.addingTimeInterval(-1) ?? last
+
+        var dueCount: [Date: Int] = [:]
+        var doneCount: [Date: Int] = [:]
+        for habit in habits where !habit.isArchived {
+            let index = CompletionIndex(habit: habit)
+            let startDay = cal.startOfDay(for: habit.effectiveStart)
+            let endDay = habit.hasEndDate ? habit.endDate.map { cal.startOfDay(for: $0) } : nil
+            for period in habit.allPeriods(upTo: windowEnd) {
+                let deadline = cal.startOfDay(for: period.end)
+                guard deadline >= first, deadline <= last, deadline >= startDay else { continue }
+                if let endDay, deadline > endDay { continue }
+                dueCount[deadline, default: 0] += 1
+                if index.contains(period) { doneCount[deadline, default: 0] += 1 }
             }
-            guard dueCount > 0 else { return Day(date: day, rate: 0, hadDue: false) }
-            return Day(date: day, rate: Double(doneCount) / Double(dueCount), hadDue: true)
+        }
+        return days.map { day in
+            let due = dueCount[day] ?? 0
+            guard due > 0 else { return Day(date: day, rate: 0, hadDue: false) }
+            return Day(date: day, rate: Double(doneCount[day] ?? 0) / Double(due), hadDue: true)
         }
     }
 

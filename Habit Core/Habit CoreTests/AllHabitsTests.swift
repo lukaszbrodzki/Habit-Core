@@ -123,4 +123,33 @@ final class AllHabitsTests: XCTestCase {
         XCTAssertEqual(HabitStats.allHabitsDays(habits: [], limit: nil), [])
         XCTAssertEqual(HabitStats.allHabitsDays(habits: [archived], limit: 10), [])
     }
+
+    /// The period-walking `combinedDays` must agree with the straightforward definition —
+    /// `isDue(on:)` asked for every day × habit — across every frequency and start/end dates.
+    func testCombinedDaysMatchesDayByDayDefinition() throws {
+        let s = try TestStore()
+        let today = s.date(2026, 3, 16)
+        let origin = s.day(-200, from: today)
+        let habits = [
+            s.habit(.daily, createdAt: origin),
+            s.habit(.weekly, createdAt: origin) { $0.weekDay = 3 },
+            s.habit(.monthly, createdAt: origin) { $0.monthDay = 31 },
+            s.habit(.custom, createdAt: origin) { $0.customDays = 5 },
+            s.habit(.daily, createdAt: origin) { $0.hasStartDate = true; $0.startDate = s.day(-50, from: today) },
+            s.habit(.weekly, createdAt: origin) { $0.weekDay = 6; $0.hasEndDate = true; $0.endDate = s.day(-90, from: today) },
+        ]
+        for (i, h) in habits.enumerated() {
+            for offset in stride(from: i, through: 200, by: 3) { s.complete(h, on: s.day(-offset, from: today)) }
+        }
+        try s.context.save()
+
+        let days = HabitStats.dayWindow(since: origin, notBefore: origin, through: today)
+        let expected = days.map { day -> HabitStats.Day in
+            let due = habits.filter { $0.isDue(on: day) }
+            guard !due.isEmpty else { return .init(date: day, rate: 0, hadDue: false) }
+            let done = due.filter { h in h.period(for: day).map { h.isCompleted(in: $0) } ?? false }
+            return .init(date: day, rate: Double(done.count) / Double(due.count), hadDue: true)
+        }
+        XCTAssertEqual(HabitStats.combinedDays(habits: habits, days: days), expected)
+    }
 }
