@@ -35,21 +35,21 @@ extension Color {
     /// VoiceOver name for a preset swatch in `habitColorHexes`.
     static func habitColorName(for hex: String) -> String {
         switch hex {
+        case "#E5484D": return String(localized: "color.red")
+        case "#F28C28": return String(localized: "color.orange")
+        case "#E0B81F": return String(localized: "color.gold")
+        case "#8DB82B": return String(localized: "color.lime")
+        case "#2E9E4F": return String(localized: "color.green")
+        case "#14A3A3": return String(localized: "color.teal")
+        case "#5BC8F0": return String(localized: "color.sky")
         case "#4A90D9": return String(localized: "color.blue")
-        case "#9B59B6": return String(localized: "color.purple")
-        case "#27AE60": return String(localized: "color.green")
-        case "#E67E22": return String(localized: "color.orange")
-        case "#E74C3C": return String(localized: "color.red")
-        case "#1ABC9C": return String(localized: "color.teal")
-        case "#E91E63": return String(localized: "color.pink")
-        case "#3F51B5": return String(localized: "color.indigo")
-        case "#F39C12": return String(localized: "color.amber")
-        case "#795548": return String(localized: "color.brown")
-        case "#00BCD4": return String(localized: "color.cyan")
-        case "#C0CA33": return String(localized: "color.lime")
-        case "#AD1457": return String(localized: "color.raspberry")
-        case "#607D8B": return String(localized: "color.bluegrey")
-        case "#1565C0": return String(localized: "color.cobalt")
+        case "#283C8F": return String(localized: "color.navy")
+        case "#7B4FE0": return String(localized: "color.purple")
+        case "#B9A3E3": return String(localized: "color.lavender")
+        case "#C2359A": return String(localized: "color.magenta")
+        case "#F27BA8": return String(localized: "color.pink")
+        case "#8B5E3C": return String(localized: "color.brown")
+        case "#4A4E55": return String(localized: "color.graphite")
         default:        return hex
         }
     }

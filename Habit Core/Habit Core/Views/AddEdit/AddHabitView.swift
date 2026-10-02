@@ -19,7 +19,7 @@ struct AddHabitView: View {
 
     @State private var name            = ""
     @State private var description     = ""
-    @State private var colorHex        = Color.habitColorHexes[0]
+    @State private var colorHex        = SharedDefaults.defaultColorHex
     @State private var frequency       = FrequencyType.daily
     @State private var customDays      = 7
     @State private var weekDay         = 2   // Monday
