@@ -7,6 +7,7 @@ struct Habit_CoreApp: App {
     @State private var syncMonitor = CloudSyncMonitor.shared
     @State private var notifications = NotificationManager.shared
     @State private var reminders = ReminderSettings.shared
+    @State private var stats = StatsSettings.shared
 
     private let container: ModelContainer = {
         do {
@@ -28,6 +29,7 @@ struct Habit_CoreApp: App {
                 .environment(syncMonitor)
                 .environment(notifications)
                 .environment(reminders)
+                .environment(stats)
                 .preferredColorScheme(theme.colorScheme)
         }
         .modelContainer(container)

@@ -9,9 +9,11 @@ struct TrackerView: View {
     private var habits: [Habit]
 
     @Environment(AppTheme.self) private var theme
+    @Environment(StatsSettings.self) private var stats
 
     @State private var showCombined = false
     @State private var showCombinedSettings = false
+    @State private var showStatsInfo = false
     @State private var habitToEdit: Habit?
     @State private var habitPendingDeletion: Habit?
 
@@ -70,6 +72,19 @@ struct TrackerView: View {
             .appBackground()
             .navigationTitle(String(localized: "tab.tracker"))
             .toolbar {
+                // Trailing, next to the view toggle — HIG: the trailing edge holds buttons that
+                // open nearby inspectors; the leading edge is for navigation. Only relevant to
+                // the All Habits view, whose numbers it explains.
+                if showCombined {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showStatsInfo = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                        }
+                        .accessibilityLabel(String(localized: "statsinfo.title"))
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showCombined.toggle()
@@ -96,6 +111,9 @@ struct TrackerView: View {
             .sheet(isPresented: $showCombinedSettings) {
                 CombinedGridSettingsView()
             }
+            .sheet(isPresented: $showStatsInfo) {
+                StatsInfoView()
+            }
         }
     }
 
@@ -105,12 +123,7 @@ struct TrackerView: View {
         HabitActions(context: modelContext, notifications: notifications).delete(habit)
     }
 
-    /// Every day since the oldest active habit started (capped at 1 year), oldest first.
     private var combinedDays: [HabitStats.Day] {
-        guard let earliest = habits.map(\.effectiveStart).min() else { return [] }
-        let today = Date()
-        let cutoff = Calendar.current.date(byAdding: .year, value: -1, to: today) ?? today
-        let window = HabitStats.dayWindow(since: earliest, notBefore: cutoff, through: today)
-        return HabitStats.combinedDays(habits: habits, days: window)
+        HabitStats.allHabitsDays(habits: habits, limit: stats.limit)
     }
 }

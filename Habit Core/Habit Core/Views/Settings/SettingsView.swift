@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(CloudSyncMonitor.self) private var syncMonitor
     @Environment(NotificationManager.self) private var notifications
     @Environment(ReminderSettings.self) private var reminders
+    @Environment(StatsSettings.self) private var stats
     @Environment(\.modelContext) private var modelContext
     @Query(
         filter: #Predicate<Habit> { !$0.isArchived },
@@ -16,6 +17,11 @@ struct SettingsView: View {
 
     @State private var showArchived  = false
     @State private var showReorder   = false
+    @State private var showStatsInfo = false
+    /// Edit buffer for "Recent occurrences": empty while editing (current value shows as the
+    /// placeholder), committed to `StatsSettings.count` when editing ends.
+    @State private var countText = ""
+    @FocusState private var countFocused: Bool
 
     var body: some View {
         NavigationStack {
@@ -51,6 +57,53 @@ struct SettingsView: View {
                             )
                         }
                     }
+                }
+
+                // Statistics window
+                Section {
+                    @Bindable var st = stats
+                    Toggle(isOn: $st.isLimited) {
+                        HStack(spacing: 6) {
+                            Text(String(localized: "settings.stats.recentonly"))
+                            Button {
+                                showStatsInfo = true
+                            } label: {
+                                Image(systemName: "info.circle")
+                                    .foregroundStyle(.secondary)
+                            }
+                            // Borderless so only the icon is tappable, not the whole row.
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel(String(localized: "settings.stats.info"))
+                            .popover(isPresented: $showStatsInfo) {
+                                Text(String(localized: "settings.stats.footer"))
+                                    .font(.footnote)
+                                    .padding()
+                                    .frame(idealWidth: 300)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    // A real bubble on iPhone too, instead of a full sheet.
+                                    .presentationCompactAdaptation(.popover)
+                            }
+                        }
+                    }
+                    if st.isLimited {
+                        LabeledContent(String(localized: "settings.stats.count")) {
+                            TextField("\(st.count)", text: $countText)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .frame(maxWidth: 100)
+                                .focused($countFocused)
+                                .onAppear { countText = "\(st.count)" }
+                                .onChange(of: countFocused) { _, focused in
+                                    if focused {
+                                        countText = ""
+                                    } else {
+                                        commitCount()
+                                    }
+                                }
+                        }
+                    }
+                } header: {
+                    Text(String(localized: "settings.section.statistics"))
                 }
 
                 // Habits management
@@ -95,6 +148,14 @@ struct SettingsView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
+            .toolbar {
+                // The number pad has no return key — give it a way to finish editing.
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button(String(localized: "button.done")) { countFocused = false }
+                }
+            }
             .appBackground()
             .navigationTitle(String(localized: "tab.settings"))
             .sheet(isPresented: $showArchived) {
@@ -114,6 +175,15 @@ struct SettingsView: View {
                 notifications.refreshDailyReminder(habits: habits)
             }
         }
+    }
+
+    /// Keeps the previous value if the field was left empty or invalid; out-of-range numbers are
+    /// clamped by `StatsSettings`.
+    private func commitCount() {
+        if let value = Int(countText.filter(\.isNumber)), value > 0 {
+            stats.count = value
+        }
+        countText = "\(stats.count)"
     }
 
     private var appVersion: String {

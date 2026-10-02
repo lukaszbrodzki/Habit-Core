@@ -1631,6 +1631,326 @@
           }
         }
       }
+    },
+    "settings.section.statistics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statystyki"
+          }
+        }
+      }
+    },
+    "settings.stats.recentonly" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Count only recent"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licz tylko ostatnie"
+          }
+        }
+      }
+    },
+    "settings.stats.count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent occurrences"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liczba ostatnich wystąpień"
+          }
+        }
+      }
+    },
+    "settings.stats.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grids and statistics include only each habit’s most recent occurrences — days, weeks or months, depending on its frequency. Older history is kept, just not counted. A period still in progress counts once it’s done."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siatki i statystyki obejmują tylko ostatnie wystąpienia każdego nawyku — dni, tygodnie lub miesiące, zależnie od częstotliwości. Starsza historia zostaje zachowana, tylko nie jest liczona. Trwający okres liczy się, gdy zostanie wykonany."
+          }
+        }
+      }
+    },
+    "settings.stats.info" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About Count only recent"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informacje o opcji Licz tylko ostatnie"
+          }
+        }
+      }
+    },
+    "statsinfo.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How stats are calculated"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jak liczymy statystyki"
+          }
+        }
+      }
+    },
+    "statsinfo.tile.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each tile is a day"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kafelek to jeden dzień"
+          }
+        }
+      }
+    },
+    "statsinfo.tile.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its colour shows how much of what was due that day got done — the stronger the colour, the more you completed."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolor pokazuje, jaką część nawyków przypadających na ten dzień wykonano — im mocniejszy kolor, tym więcej."
+          }
+        }
+      }
+    },
+    "statsinfo.due.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When a habit counts"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kiedy nawyk się liczy"
+          }
+        }
+      }
+    },
+    "statsinfo.due.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daily habits count every day. Weekly, monthly and every-N-days habits count only on their deadline day. Doing one earlier in its period still counts — on the deadline day. Example: a weekly habit due on Monday and done on Wednesday shows up on Monday."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nawyki codzienne liczą się każdego dnia. Tygodniowe, miesięczne i „co N dni” liczą się tylko w dniu terminu. Wykonanie wcześniej w danym okresie też się zalicza — w dniu terminu. Przykład: nawyk tygodniowy na poniedziałek wykonany w środę pojawi się w poniedziałek."
+          }
+        }
+      }
+    },
+    "statsinfo.free.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days with nothing due"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dni bez nawyków do zrobienia"
+          }
+        }
+      }
+    },
+    "statsinfo.free.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They count as perfect days and don’t break your streak."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liczą się jako idealne dni i nie przerywają serii."
+          }
+        }
+      }
+    },
+    "statsinfo.today.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dzisiaj"
+          }
+        }
+      }
+    },
+    "statsinfo.today.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today appears once everything due today is done, so an unfinished morning doesn’t lower your stats."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dzisiejszy dzień pojawia się, gdy wszystko na dziś jest zrobione — niedokończony poranek nie obniża statystyk."
+          }
+        }
+      }
+    },
+    "statsinfo.stats.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The numbers"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liczby"
+          }
+        }
+      }
+    },
+    "statsinfo.stats.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perfect Days: days with no unmet habit, out of all days. Rate: average completion on days when something was due. Longest Streak: the longest run of perfect days in a row."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idealne dni: dni bez niewykonanego nawyku spośród wszystkich dni. Skuteczność: średnie wykonanie w dni, w które coś było do zrobienia. Najdłuższa seria: najdłuższy ciąg idealnych dni z rzędu."
+          }
+        }
+      }
+    },
+    "statsinfo.archived.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archived habits"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zarchiwizowane nawyki"
+          }
+        }
+      }
+    },
+    "statsinfo.archived.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They aren’t counted at all."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie są w ogóle liczone."
+          }
+        }
+      }
+    },
+    "statsinfo.recent.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Count only recent"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licz tylko ostatnie"
+          }
+        }
+      }
+    },
+    "statsinfo.recent.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When turned on in Settings, everything here covers only the last N days."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gdy włączysz tę opcję w Ustawieniach, wszystko tutaj obejmuje tylko ostatnie N dni."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

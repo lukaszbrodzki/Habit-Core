@@ -4,10 +4,12 @@ struct HabitGridSection: View {
     let habit: Habit
     let onEdit: () -> Void
 
+    @Environment(StatsSettings.self) private var stats
+
     var body: some View {
-        // Computed once per body pass, then shared by the grid and the stats row.
-        let periods = Array(habit.allPeriods().reversed())   // oldest first
-        let completions = HabitStats.completions(of: habit, in: periods)
+        // Computed once per body pass, then shared by the grid and the stats row. Only counted
+        // periods are shown, so the grid matches the numbers under it.
+        let completions = HabitStats.countedPeriods(of: habit, limit: stats.limit).completions
         let summary = HabitStats.summary(of: completions)
 
         VStack(alignment: .leading, spacing: 10) {
@@ -48,13 +50,12 @@ struct HabitGridSection: View {
             }
 
             // Grid
-            if periods.isEmpty {
+            if completions.isEmpty {
                 Text(String(localized: "tracker.nodata"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else {
                 ContributionGrid(
-                    periods: periods,
                     completions: completions,
                     color: Color(hex: habit.colorHex) ?? .accentColor
                 )
