@@ -13,6 +13,7 @@ struct TrackerView: View {
 
     @State private var showCombined = false
     @State private var showCombinedSettings = false
+    @State private var showStatsInfo = false
     @State private var habitToEdit: Habit?
     @State private var habitPendingDeletion: Habit?
 
@@ -31,6 +32,15 @@ struct TrackerView: View {
                             HStack(alignment: .top) {
                                 Text(String(localized: "tracker.combined.title"))
                                     .font(.headline)
+                                Button {
+                                    showStatsInfo = true
+                                } label: {
+                                    Image(systemName: "info.circle")
+                                        .foregroundStyle(.secondary)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(String(localized: "statsinfo.title"))
                                 Spacer()
                                 Button {
                                     showCombinedSettings = true
@@ -96,6 +106,9 @@ struct TrackerView: View {
             }
             .sheet(isPresented: $showCombinedSettings) {
                 CombinedGridSettingsView()
+            }
+            .sheet(isPresented: $showStatsInfo) {
+                StatsInfoView()
             }
         }
     }
