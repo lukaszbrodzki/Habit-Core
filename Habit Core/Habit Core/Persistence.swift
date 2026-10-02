@@ -82,3 +82,40 @@ enum ColorSchemePreference: String, CaseIterable {
         }
     }
 }
+
+// MARK: - Statistics window
+
+/// Settings → Statistics → "Count only recent". Stored in the App Group suite so the widget
+/// (via `SharedDefaults.statsLimit()`) counts exactly the same occurrences as the app.
+@Observable
+final class StatsSettings {
+    static let shared = StatsSettings()
+
+    private static let defaults = UserDefaults(suiteName: AppGroup.identifier) ?? .standard
+
+    var isLimited: Bool {
+        didSet {
+            Self.defaults.set(isLimited, forKey: SharedDefaults.statsLimitEnabledKey)
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+    }
+
+    var count: Int {
+        didSet {
+            let clamped = min(max(count, SharedDefaults.statsLimitRange.lowerBound), SharedDefaults.statsLimitRange.upperBound)
+            // Assigning inside didSet doesn't re-trigger it, so the clamped value is saved below.
+            if clamped != count { count = clamped }
+            Self.defaults.set(count, forKey: SharedDefaults.statsLimitCountKey)
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+    }
+
+    /// What the stats code takes: the recent-occurrence limit, or `nil` for the whole history.
+    var limit: Int? { isLimited ? count : nil }
+
+    private init() {
+        isLimited = Self.defaults.bool(forKey: SharedDefaults.statsLimitEnabledKey)
+        let stored = Self.defaults.integer(forKey: SharedDefaults.statsLimitCountKey)
+        count = stored == 0 ? SharedDefaults.defaultStatsLimitCount : stored
+    }
+}

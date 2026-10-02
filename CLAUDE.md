@@ -47,18 +47,18 @@ Never commit directly to `main` or `acceptance`. Bump `CURRENT_PROJECT_VERSION` 
 ### Business logic
 `Extensions/Habit+Period.swift` — all period/deadline calculation lives here:
 - `period(for:)` — returns `Period(start:end:)` for the habit's current period relative to a given date. Handles all four `FrequencyType` cases.
-- `allPeriods(upTo:)` — returns periods newest-first, capped at 1 year / 400 iterations (used by the tracker grid).
+- `allPeriods(upTo:)` — returns the whole history of periods, newest-first (no cap). What counts is decided by `HabitStats.countedPeriods`.
 - `canMarkToday`, `isCompletedToday`, `isCompleted(in:)`, `completedEntry(in:)`, `isDue(on:)`, `dueDate`, `todaySortPriority` — derived state used by views.
 
 `Shared/` — files with **dual target membership** (app + widget; listed in the widget's membership exceptions in `project.pbxproj`):
-- `HabitStats.swift` — all grid/stat math (`allHabitsDays(habits:range:)` is the one "All Habits" series for Tracker `.lastYear` and widget `.lastDays(84)`; day windows, per-period completions, combined daily rates, summaries/streaks) + `CompletionIndex`. Never re-implement these in a view or the widget.
+- `HabitStats.swift` — all grid/stat math (`countedPeriods(of:limit:)` per habit and `allHabitsDays(habits:limit:)` for "All Habits" — both honour Settings → "Count only recent" via `limit` and count the in-progress current period only once done; day windows, per-period completions, combined daily rates, summaries/streaks) + `CompletionIndex`. Never re-implement these in a view or the widget.
 - `HeatmapGrid.swift` (+ `HeatmapPalette`), `StatsRow.swift` (`StatChip`, `StatsRow`) — shared UI.
 - `SharedStore.swift` — the one `ModelContainer` factory (schema, App Group URL, file name).
 
 `Services/HabitActions.swift` — every habit mutation (toggle, archive/restore, reset, delete, commit after add/edit/reorder): saves, logs failures via `Logger`, refreshes the reminder. Views must not call `modelContext.save()` directly.
 
 ### App-wide theme
-`Persistence.swift` contains `AppTheme` (appearance + combined grid color), `ReminderSettings` (daily reminder toggle/time) — both `@Observable` singletons injected via environment — and the `ColorSchemePreference` enum. Stored in the App Group `UserDefaults` suite.
+`Persistence.swift` contains `AppTheme` (appearance + combined grid color), `ReminderSettings` (daily reminder toggle/time), `StatsSettings` ("Count only recent" toggle + N; the widget reads the same keys via `SharedDefaults.statsLimit()`) — both `@Observable` singletons injected via environment — and the `ColorSchemePreference` enum. Stored in the App Group `UserDefaults` suite.
 
 ### Views
 ```

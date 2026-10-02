@@ -1631,6 +1631,70 @@
           }
         }
       }
+    },
+    "settings.section.statistics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statystyki"
+          }
+        }
+      }
+    },
+    "settings.stats.recentonly" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Count only recent"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Licz tylko ostatnie"
+          }
+        }
+      }
+    },
+    "settings.stats.count" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent occurrences"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liczba ostatnich wystąpień"
+          }
+        }
+      }
+    },
+    "settings.stats.footer" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grids and statistics include only each habit’s most recent occurrences — days, weeks or months, depending on its frequency. Older history is kept, just not counted. A period still in progress counts once it’s done."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siatki i statystyki obejmują tylko ostatnie wystąpienia każdego nawyku — dni, tygodnie lub miesiące, zależnie od częstotliwości. Starsza historia zostaje zachowana, tylko nie jest liczona. Trwający okres liczy się, gdy zostanie wykonany."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

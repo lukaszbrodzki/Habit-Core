@@ -193,25 +193,22 @@ extension Habit {
 
     // MARK: - History periods (newest first)
 
-    /// All periods from `effectiveStart` up to `date`, newest first.
-    /// Capped at 1 year / 400 iterations.
+    /// All periods from `effectiveStart` up to `date`, newest first — the whole history; how much
+    /// of it counts is decided by the stats window (`HabitStats.countedPeriods`).
     func allPeriods(upTo date: Date = Date()) -> [Period] {
         let cal        = Calendar.current
-        let cutoff     = cal.date(byAdding: .year, value: -1, to: date) ?? date
-        let habitStart = cal.startOfDay(for: effectiveStart)
-        let lowerBound = habitStart > cutoff ? habitStart : cutoff
+        let lowerBound = cal.startOfDay(for: effectiveStart)
 
-        var periods    = [Period]()
-        var cursor     = date
-        var iterations = 0
+        var periods = [Period]()
+        var cursor  = date
 
-        while cursor >= lowerBound && iterations < 400 {
+        // Terminates: each step moves the cursor to before the start of the period just added.
+        while cursor >= lowerBound {
             guard let p = period(for: cursor) else { break }
             periods.append(p)
             guard let prev = cal.date(byAdding: .day, value: -1, to: p.start),
                   prev >= lowerBound else { break }
             cursor = prev
-            iterations += 1
         }
         return periods
     }

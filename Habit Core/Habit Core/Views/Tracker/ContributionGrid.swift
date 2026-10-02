@@ -1,20 +1,14 @@
 import SwiftUI
 
-/// Contribution grid for a single habit. Each square = one period (day / week / month / custom
-/// cycle), wrapped into rows of `columns`.
+/// Contribution grid for a single habit. Each square = one counted period (day / week / month /
+/// custom cycle), wrapped into rows of `columns`.
 struct ContributionGrid: View {
-    /// Oldest first.
-    let periods: [Habit.Period]
-    /// Parallel to `periods` (see `HabitStats.completions(of:in:)`).
+    /// One flag per counted period, oldest first (see `HabitStats.countedPeriods`).
     let completions: [Bool]
     let color: Color
 
     var body: some View {
-        let now = Date()
-        let cells = zip(periods, completions).map { period, completed in
-            HeatmapPalette.completion(period.start > now ? nil : completed, color: color)
-        }
-        HeatmapGrid(cells: cells, columns: 20, tileSize: 13)
+        HeatmapGrid(cells: completions.map { HeatmapPalette.completion($0, color: color) }, columns: 20, tileSize: 13)
             .padding(.vertical, 2)
     }
 }

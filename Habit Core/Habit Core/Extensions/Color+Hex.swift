@@ -10,6 +10,20 @@ nonisolated enum AppGroup {
 nonisolated enum SharedDefaults {
     static let combinedGridColorHexKey = "combinedGridColorHex"
     static let defaultColorHex = "#4A90D9"
+
+    /// Settings → Statistics → "Count only recent".
+    static let statsLimitEnabledKey = "statsLimitEnabled"
+    static let statsLimitCountKey = "statsLimitCount"
+    static let defaultStatsLimitCount = 30
+    static let statsLimitRange = 1...3650
+
+    /// How many recent occurrences count toward stats, or `nil` for the whole history.
+    static func statsLimit(in defaults: UserDefaults? = UserDefaults(suiteName: AppGroup.identifier)) -> Int? {
+        guard let defaults, defaults.bool(forKey: statsLimitEnabledKey) else { return nil }
+        let stored = defaults.integer(forKey: statsLimitCountKey)
+        let count = stored == 0 ? defaultStatsLimitCount : stored
+        return min(max(count, statsLimitRange.lowerBound), statsLimitRange.upperBound)
+    }
 }
 
 extension Color {

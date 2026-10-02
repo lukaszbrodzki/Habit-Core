@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Environment(CloudSyncMonitor.self) private var syncMonitor
     @Environment(NotificationManager.self) private var notifications
     @Environment(ReminderSettings.self) private var reminders
+    @Environment(StatsSettings.self) private var stats
     @Environment(\.modelContext) private var modelContext
     @Query(
         filter: #Predicate<Habit> { !$0.isArchived },
@@ -51,6 +52,28 @@ struct SettingsView: View {
                             )
                         }
                     }
+                }
+
+                // Statistics window
+                Section {
+                    @Bindable var st = stats
+                    Toggle(String(localized: "settings.stats.recentonly"), isOn: $st.isLimited)
+                    if st.isLimited {
+                        LabeledContent(String(localized: "settings.stats.count")) {
+                            TextField(
+                                String(localized: "settings.stats.count"),
+                                value: $st.count,
+                                format: .number
+                            )
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 100)
+                        }
+                    }
+                } header: {
+                    Text(String(localized: "settings.section.statistics"))
+                } footer: {
+                    Text(String(localized: "settings.stats.footer"))
                 }
 
                 // Habits management

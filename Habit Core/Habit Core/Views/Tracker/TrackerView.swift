@@ -9,6 +9,7 @@ struct TrackerView: View {
     private var habits: [Habit]
 
     @Environment(AppTheme.self) private var theme
+    @Environment(StatsSettings.self) private var stats
 
     @State private var showCombined = false
     @State private var showCombinedSettings = false
@@ -106,6 +107,6 @@ struct TrackerView: View {
     }
 
     private var combinedDays: [HabitStats.Day] {
-        HabitStats.allHabitsDays(habits: habits, range: .lastYear)
+        HabitStats.allHabitsDays(habits: habits, limit: stats.limit)
     }
 }

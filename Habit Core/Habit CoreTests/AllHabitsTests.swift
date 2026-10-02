@@ -7,23 +7,25 @@ import SwiftData
 @MainActor
 final class AllHabitsTests: XCTestCase {
 
-    /// 2 daily + weekly (deadline = today's weekday) + monthly (deadline on the 12th).
-    /// A is done every day, B never, W once inside its current week, M once in its month.
+    /// 2 daily + weekly (deadline on the 16th's weekday) + monthly (deadline on the 12th).
+    /// A is done every day through the 16th, B never, W once inside its week, M once in its month.
+    /// "Today" is the 17th: still in progress (nothing done), so it isn't counted yet.
     func testMixedFrequenciesCountOnlyOnDeadlines() throws {
         let s = try TestStore()
-        let today = s.date(2026, 3, 16)
+        let lastDay = s.date(2026, 3, 16)
+        let today = s.date(2026, 3, 17)
         let start = s.date(2026, 3, 9)
         let a = s.habit(.daily, createdAt: start)
         s.habit(.daily, createdAt: start)
-        let w = s.habit(.weekly, createdAt: start) { $0.weekDay = s.cal.component(.weekday, from: today) }
+        let w = s.habit(.weekly, createdAt: start) { $0.weekDay = s.cal.component(.weekday, from: lastDay) }
         let m = s.habit(.monthly, createdAt: start) { $0.monthDay = 12 }
-        for offset in 0...7 { s.complete(a, on: s.day(-offset, from: today)) }
+        for offset in 0...7 { s.complete(a, on: s.day(-offset, from: lastDay)) }
         s.complete(w, on: s.date(2026, 3, 11))
         s.complete(m, on: s.date(2026, 3, 10))
         try s.context.save()
 
         let habits = try s.context.fetch(FetchDescriptor<Habit>())
-        let days = HabitStats.allHabitsDays(habits: habits, range: .lastYear, today: today)
+        let days = HabitStats.allHabitsDays(habits: habits, limit: nil, today: today)
 
         XCTAssertEqual(days.map(\.date), (0...7).map { s.day($0, from: start) })
         XCTAssertTrue(days.allSatisfy(\.hadDue))
@@ -50,10 +52,11 @@ final class AllHabitsTests: XCTestCase {
         try s.context.save()
 
         let days = HabitStats.allHabitsDays(
-            habits: try s.context.fetch(FetchDescriptor<Habit>()), range: .lastYear, today: today
+            habits: try s.context.fetch(FetchDescriptor<Habit>()), limit: nil, today: today
         )
+        // Today (nothing done yet) is still in progress, so the counted days are T-3...T-1.
         XCTAssertEqual(days.first?.date, s.day(-3, from: today))
-        XCTAssertEqual(days.count, 4)
+        XCTAssertEqual(days.count, 3)
         // Only the active (never completed) habit is due — the archived completion must not count.
         XCTAssertTrue(days.allSatisfy { $0.hadDue && $0.rate == 0 })
     }
@@ -75,10 +78,11 @@ final class AllHabitsTests: XCTestCase {
         try s.context.save()
 
         let days = HabitStats.allHabitsDays(
-            habits: try s.context.fetch(FetchDescriptor<Habit>()), range: .lastYear, today: today
+            habits: try s.context.fetch(FetchDescriptor<Habit>()), limit: nil, today: today
         )
-        // Only A is done, so rate = 1 / number of habits due that day.
-        XCTAssertEqual(days.map(\.rate), [0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5])
+        // Only A is done, so rate = 1 / number of habits due that day. Today (A done, the
+        // late-starting habit not) is still in progress, so it isn't counted.
+        XCTAssertEqual(days.map(\.rate), [0.5, 0.5, 0.5, 1, 0.5, 0.5])
     }
 
     func testHabitAddedTodayCountsFromToday() throws {
@@ -87,33 +91,36 @@ final class AllHabitsTests: XCTestCase {
         let h = s.habit(.daily, createdAt: s.date(2026, 3, 16, hour: 9))
         try s.context.save()
 
-        var days = HabitStats.allHabitsDays(habits: [h], range: .lastYear, today: today)
-        XCTAssertEqual(days, [HabitStats.Day(date: s.day(0, from: today), rate: 0, hadDue: true)])
+        // Due but not done yet: today is in progress, so nothing counts yet.
+        var days = HabitStats.allHabitsDays(habits: [h], limit: nil, today: today)
+        XCTAssertEqual(days, [])
 
         s.complete(h, on: today)
         try s.context.save()
-        days = HabitStats.allHabitsDays(habits: [h], range: .lastYear, today: today)
+        days = HabitStats.allHabitsDays(habits: [h], limit: nil, today: today)
         XCTAssertEqual(days.map(\.rate), [1])
     }
 
-    func testRangeClampsOldHabits() throws {
+    func testLimitKeepsMostRecentCountedDays() throws {
         let s = try TestStore()
         let today = s.date(2026, 3, 16)
-        let h = s.habit(.daily, createdAt: s.day(-400, from: today))
+        let h = s.habit(.daily, createdAt: s.day(-400, from: today))   // never done → today in progress
 
-        let widget = HabitStats.allHabitsDays(habits: [h], range: .lastDays(84), today: today)
-        XCTAssertEqual(widget.count, 84)
-        XCTAssertEqual(widget.first?.date, s.day(-83, from: today))
-        XCTAssertEqual(widget.last?.date, s.day(0, from: today))
+        let limited = HabitStats.allHabitsDays(habits: [h], limit: 84, today: today)
+        XCTAssertEqual(limited.count, 84)
+        XCTAssertEqual(limited.first?.date, s.day(-84, from: today))
+        XCTAssertEqual(limited.last?.date, s.day(-1, from: today))
 
-        let tracker = HabitStats.allHabitsDays(habits: [h], range: .lastYear, today: today)
-        XCTAssertEqual(tracker.first?.date, s.cal.startOfDay(for: s.date(2025, 3, 16)))
+        // No limit: the whole history, with no one-year cap.
+        let all = HabitStats.allHabitsDays(habits: [h], limit: nil, today: today)
+        XCTAssertEqual(all.first?.date, s.day(-400, from: today))
+        XCTAssertEqual(all.count, 400)
     }
 
     func testNoActiveHabitsGivesEmptySeries() throws {
         let s = try TestStore()
         let archived = s.habit(.daily, createdAt: s.date(2026, 3, 1)) { $0.isArchived = true }
-        XCTAssertEqual(HabitStats.allHabitsDays(habits: [], range: .lastYear), [])
-        XCTAssertEqual(HabitStats.allHabitsDays(habits: [archived], range: .lastYear), [])
+        XCTAssertEqual(HabitStats.allHabitsDays(habits: [], limit: nil), [])
+        XCTAssertEqual(HabitStats.allHabitsDays(habits: [archived], limit: 10), [])
     }
 }

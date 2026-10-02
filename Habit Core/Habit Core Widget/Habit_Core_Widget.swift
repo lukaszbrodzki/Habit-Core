@@ -3,19 +3,22 @@ import SwiftUI
 import SwiftData
 
 /// Plain-value snapshot of a Habit, safe to hold after the fetching ModelContext goes away.
-/// `recentPeriods` is one flag per period (same tiles as the in-app ContributionGrid), oldest first.
+/// `summary` covers every counted period (same numbers as the app's Tracker, honouring
+/// Settings → "Count only recent"); `recentPeriods` is just the tail of it the grid can show.
 struct HabitSnapshot: Identifiable {
     let id: UUID
     let name: String
     let colorHex: String
     let recentPeriods: [Bool]
+    let summary: HabitStats.HabitSummary
 }
 
 enum HabitWidgetMode {
     /// `nil` snapshot means the configured habit no longer exists (deleted) or there are none yet.
     case singleHabit(HabitSnapshot?)
-    /// Per-day completion across all active habits, oldest first.
-    case allHabits(colorHex: String, days: [HabitStats.Day])
+    /// Per-day completion across all active habits (tail the grid can show, oldest first) and the
+    /// summary over every counted day.
+    case allHabits(colorHex: String, days: [HabitStats.Day], summary: HabitStats.CombinedSummary)
 }
 
 struct HabitWidgetEntry: TimelineEntry {
@@ -23,7 +26,7 @@ struct HabitWidgetEntry: TimelineEntry {
     let mode: HabitWidgetMode
 }
 
-/// Enough history for the widest widget grid (13 × 5 tiles), with headroom.
+/// Enough tiles for the widest widget grid (13 × 5), with headroom.
 private let historyTiles = 84
 
 struct Provider: AppIntentTimelineProvider {
@@ -51,22 +54,28 @@ struct Provider: AppIntentTimelineProvider {
             sortBy: [SortDescriptor(\.sortOrder)]
         )
         let habits = (try? context.fetch(descriptor)) ?? []
+        let limit = SharedDefaults.statsLimit()
 
         if configuration.habit.id == HabitEntity.allHabitsID {
             let colorHex = UserDefaults(suiteName: AppGroup.identifier)?.string(forKey: SharedDefaults.combinedGridColorHexKey)
                 ?? SharedDefaults.defaultColorHex
-            let days = HabitStats.allHabitsDays(habits: habits, range: .lastDays(historyTiles))
-            return HabitWidgetEntry(date: Date(), mode: .allHabits(colorHex: colorHex, days: days))
+            let days = HabitStats.allHabitsDays(habits: habits, limit: limit)
+            return HabitWidgetEntry(date: Date(), mode: .allHabits(
+                colorHex: colorHex,
+                days: Array(days.suffix(historyTiles)),
+                summary: HabitStats.summary(of: days)
+            ))
         } else {
             guard let habit = habits.first(where: { $0.id == configuration.habit.id }) else {
                 return HabitWidgetEntry(date: Date(), mode: .singleHabit(nil))
             }
-            let periods = Array(habit.allPeriods().prefix(historyTiles).reversed())   // oldest first
+            let completions = HabitStats.countedPeriods(of: habit, limit: limit).completions
             let snap = HabitSnapshot(
                 id: habit.id,
                 name: habit.name,
                 colorHex: habit.colorHex,
-                recentPeriods: HabitStats.completions(of: habit, in: periods)
+                recentPeriods: Array(completions.suffix(historyTiles)),
+                summary: HabitStats.summary(of: completions)
             )
             return HabitWidgetEntry(date: Date(), mode: .singleHabit(snap))
         }
@@ -87,9 +96,8 @@ struct Habit_Core_WidgetEntryView: View {
         switch entry.mode {
         case .singleHabit(let habit):
             if let habit {
-                // Stats describe exactly the visible tile window, not the habit's full history.
-                let visible = Array(habit.recentPeriods.suffix(columns * rowCount))
-                let summary = HabitStats.summary(of: visible)
+                // Stats match the app (all counted periods); the grid shows the most recent ones that fit.
+                let summary = habit.summary
                 let color = Color(hex: habit.colorHex) ?? .blue
                 WidgetGridCard(
                     title: habit.name,
@@ -98,7 +106,7 @@ struct Habit_Core_WidgetEntryView: View {
                         .init(value: "\(summary.ratePercent)%", label: String(localized: "tracker.stat.rate")),
                         .init(value: "\(summary.streak)", label: String(localized: "widget.stat.streak")),
                     ],
-                    cells: visible.map { HeatmapPalette.completion($0, color: color) },
+                    cells: habit.recentPeriods.map { HeatmapPalette.completion($0, color: color) },
                     columns: columns,
                     rowCount: rowCount,
                     showFullStats: showFullStats
@@ -109,9 +117,7 @@ struct Habit_Core_WidgetEntryView: View {
                     .foregroundStyle(.secondary)
                     .padding()
             }
-        case .allHabits(let colorHex, let days):
-            let visible = Array(days.suffix(columns * rowCount))
-            let summary = HabitStats.summary(of: visible)
+        case .allHabits(let colorHex, let days, let summary):
             let color = Color(hex: colorHex) ?? .accentColor
             WidgetGridCard(
                 title: String(localized: "tracker.combined.title"),
@@ -120,7 +126,7 @@ struct Habit_Core_WidgetEntryView: View {
                     .init(value: "\(summary.ratePercent)%", label: String(localized: "tracker.stat.rate")),
                     .init(value: "\(summary.streak)", label: String(localized: "widget.stat.streak")),
                 ],
-                cells: visible.map { HeatmapPalette.rate($0.rate, color: color) },
+                cells: days.map { HeatmapPalette.rate($0.rate, color: color) },
                 columns: columns,
                 rowCount: rowCount,
                 showFullStats: showFullStats
