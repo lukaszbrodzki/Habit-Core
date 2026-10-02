@@ -26,6 +26,10 @@ struct ContentView: View {
             notifications.refreshAuthorizationStatus()
             notifications.refreshDailyReminder(context: modelContext)
         }
+        // Midnight while the app stays open: the new day may need its own reminder.
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+            notifications.refreshDailyReminder(context: modelContext)
+        }
         // One place for every habit/entry mutation (toggle, add/edit, archive, reorder, delete),
         // so the widget never lags up to a full timeline interval behind the app.
         .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in

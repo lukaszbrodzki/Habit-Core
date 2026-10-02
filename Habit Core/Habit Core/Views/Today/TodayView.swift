@@ -49,6 +49,7 @@ struct TodayView: View {
                             }
                     }
                     .listStyle(.plain)
+                    .refreshOnNewDay()
                 }
             }
             .appBackground()

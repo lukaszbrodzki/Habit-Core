@@ -66,6 +66,7 @@ struct TrackerView: View {
                     }
                 }
                 .padding(.vertical)
+                .refreshOnNewDay()
             }
             .appBackground()
             .navigationTitle(String(localized: "tab.tracker"))
