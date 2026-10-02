@@ -1695,6 +1695,22 @@
           }
         }
       }
+    },
+    "settings.stats.info" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About Count only recent"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informacje o opcji Licz tylko ostatnie"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

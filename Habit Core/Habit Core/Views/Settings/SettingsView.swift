@@ -17,6 +17,7 @@ struct SettingsView: View {
 
     @State private var showArchived  = false
     @State private var showReorder   = false
+    @State private var showStatsInfo = false
 
     var body: some View {
         NavigationStack {
@@ -57,7 +58,29 @@ struct SettingsView: View {
                 // Statistics window
                 Section {
                     @Bindable var st = stats
-                    Toggle(String(localized: "settings.stats.recentonly"), isOn: $st.isLimited)
+                    Toggle(isOn: $st.isLimited) {
+                        HStack(spacing: 6) {
+                            Text(String(localized: "settings.stats.recentonly"))
+                            Button {
+                                showStatsInfo = true
+                            } label: {
+                                Image(systemName: "info.circle")
+                                    .foregroundStyle(.secondary)
+                            }
+                            // Borderless so only the icon is tappable, not the whole row.
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel(String(localized: "settings.stats.info"))
+                            .popover(isPresented: $showStatsInfo) {
+                                Text(String(localized: "settings.stats.footer"))
+                                    .font(.footnote)
+                                    .padding()
+                                    .frame(idealWidth: 300)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    // A real bubble on iPhone too, instead of a full sheet.
+                                    .presentationCompactAdaptation(.popover)
+                            }
+                        }
+                    }
                     if st.isLimited {
                         LabeledContent(String(localized: "settings.stats.count")) {
                             TextField(
@@ -72,8 +95,6 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text(String(localized: "settings.section.statistics"))
-                } footer: {
-                    Text(String(localized: "settings.stats.footer"))
                 }
 
                 // Habits management
