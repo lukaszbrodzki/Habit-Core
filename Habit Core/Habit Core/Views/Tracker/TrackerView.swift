@@ -32,15 +32,6 @@ struct TrackerView: View {
                             HStack(alignment: .top) {
                                 Text(String(localized: "tracker.combined.title"))
                                     .font(.headline)
-                                Button {
-                                    showStatsInfo = true
-                                } label: {
-                                    Image(systemName: "info.circle")
-                                        .foregroundStyle(.secondary)
-                                        .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel(String(localized: "statsinfo.title"))
                                 Spacer()
                                 Button {
                                     showCombinedSettings = true
@@ -81,6 +72,19 @@ struct TrackerView: View {
             .appBackground()
             .navigationTitle(String(localized: "tab.tracker"))
             .toolbar {
+                // Trailing, next to the view toggle — HIG: the trailing edge holds buttons that
+                // open nearby inspectors; the leading edge is for navigation. Only relevant to
+                // the All Habits view, whose numbers it explains.
+                if showCombined {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showStatsInfo = true
+                        } label: {
+                            Image(systemName: "info.circle")
+                        }
+                        .accessibilityLabel(String(localized: "statsinfo.title"))
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showCombined.toggle()
