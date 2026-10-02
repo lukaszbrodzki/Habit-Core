@@ -1,9 +1,13 @@
 {
   "fill" : {
-    "automatic-gradient" : "display-p3:0.08731,0.07841,0.18426,1.00000"
+    "linear-gradient" : [
+      "display-p3:0.20216,0.19751,0.32212,1.00000",
+      "display-p3:0.13735,0.13322,0.22014,1.00000"
+    ]
   },
   "groups" : [
     {
+      "blur-material" : null,
       "layers" : [
         {
           "blend-mode" : "normal",
