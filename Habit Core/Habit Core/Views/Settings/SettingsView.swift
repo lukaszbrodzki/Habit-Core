@@ -120,12 +120,11 @@ struct SettingsView: View {
                 }
 
                 // Legal
+                // Privacy policy is required in-app (Guideline 5.1.1(i)). No own Terms of Use: the app
+                // is free with no accounts or purchases, so Apple's standard EULA applies.
                 Section(String(localized: "settings.section.legal")) {
-                    // Replace URLs before App Store submission
-                    Link(String(localized: "settings.terms"),
-                         destination: URL(string: "https://example.com/terms")!)
                     Link(String(localized: "settings.privacy"),
-                         destination: URL(string: "https://example.com/privacy")!)
+                         destination: URL(string: "https://lukbro.com/habitcore/privacy-policy/")!)
                 }
 
                 // iCloud sync status

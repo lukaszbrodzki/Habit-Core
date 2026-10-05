@@ -1152,22 +1152,6 @@
         }
       }
     },
-    "settings.terms" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terms of Use"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Warunki użytkowania"
-          }
-        }
-      }
-    },
     "settings.theme" : {
       "localizations" : {
         "en" : {
