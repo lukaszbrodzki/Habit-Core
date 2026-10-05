@@ -77,6 +77,7 @@
 				Models/Habit.swift,
 				Models/HabitEntry.swift,
 				Shared/HabitStats.swift,
+				Shared/HabitWidgetContent.swift,
 				Shared/HeatmapGrid.swift,
 				Shared/SharedStore.swift,
 				Shared/StatsRow.swift,

@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1260px; height: 2736px; }
+  body {
+    position: relative;
+    overflow: hidden;
+    background: #060f0c;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  }
+  .glow { position: absolute; border-radius: 50%; filter: blur(20px); }
+  .glow-1 { width: 1300px; height: 1300px; left: -360px; top: 500px;
+    background: radial-gradient(circle, rgba(34,197,94,0.30), transparent 62%); }
+  .glow-2 { width: 1100px; height: 1100px; right: -320px; top: 1500px;
+    background: radial-gradient(circle, rgba(20,184,166,0.30), transparent 62%); }
+  .glow-3 { width: 900px; height: 900px; left: -260px; top: 1900px;
+    background: radial-gradient(circle, rgba(74,222,128,0.16), transparent 60%); }
+
+  .caption {
+    position: absolute;
+    top: 120px; left: 0; right: 0;
+    text-align: center;
+    padding: 0 70px;
+    font-weight: 800;
+    font-size: {{FONT_SIZE}}px;
+    line-height: 1.12;
+    letter-spacing: -2px;
+    color: #ffffff;
+  }
+  .caption .accent { color: #4ade80; }
+
+  /* Real widget renders (ImageRenderer, 3x): medium 1092x510, small 510x510. */
+  .w { position: absolute; left: 50%; transform: translateX(-50%);
+       box-shadow: 0 28px 64px rgba(0,0,0,0.55); border-radius: 64px; }
+  .medium-all    { top: 860px;  width: 1000px; }
+  .medium-single { top: 1400px; width: 1000px; }
+  .small         { top: 1940px; width: 467px; }
+</style>
+</head>
+<body>
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+  <div class="glow glow-3"></div>
+  <div class="caption">{{CAPTION}}</div>
+  <img class="w medium-all"    src="{{WIDGET_MEDIUM_ALL}}">
+  <img class="w medium-single" src="{{WIDGET_MEDIUM_SINGLE}}">
+  <img class="w small"         src="{{WIDGET_SMALL}}">
+</body>
+</html>

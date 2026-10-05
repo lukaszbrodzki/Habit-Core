@@ -198,6 +198,15 @@ struct AddHabitView: View {
     // MARK: - Logic
 
     private func loadExisting() {
+        #if DEBUG
+        if editing == nil, ScreenshotMode.openAdd {
+            name = ScreenshotSeeder.addPresetName
+            description = ScreenshotSeeder.addPresetNote
+            colorHex = "#B9A3E3"
+            frequency = .custom
+            customDays = 3
+        }
+        #endif
         guard let h = editing else { return }
         name        = h.name
         description = h.habitDescription

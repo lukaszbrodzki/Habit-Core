@@ -7,15 +7,18 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(NotificationManager.self) private var notifications
 
+    /// Always `.today` in Release; Debug screenshot runs can start elsewhere (`ScreenshotMode`).
+    @State private var selectedTab = ScreenshotMode.initialTab
+
     var body: some View {
-        TabView {
-            Tab(String(localized: "tab.today"), systemImage: "dot.scope") {
+        TabView(selection: $selectedTab) {
+            Tab(String(localized: "tab.today"), systemImage: "dot.scope", value: AppTab.today) {
                 TodayView()
             }
-            Tab(String(localized: "tab.tracker"), systemImage: "rectangle.grid.3x3.fill") {
+            Tab(String(localized: "tab.tracker"), systemImage: "rectangle.grid.3x3.fill", value: AppTab.tracker) {
                 TrackerView()
             }
-            Tab(String(localized: "tab.settings"), systemImage: "gearshape.fill") {
+            Tab(String(localized: "tab.settings"), systemImage: "gearshape.fill", value: AppTab.settings) {
                 SettingsView()
             }
         }
