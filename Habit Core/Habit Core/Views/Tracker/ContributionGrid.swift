@@ -8,7 +8,7 @@ struct ContributionGrid: View {
     let color: Color
 
     var body: some View {
-        HeatmapGrid(cells: completions.map { HeatmapPalette.completion($0, color: color) }, columns: 20, tileSize: 13)
+        HeatmapGrid(cells: completions.map { HeatmapPalette.completion($0, color: color) }, columns: 20)
             .padding(.vertical, 2)
     }
 }
@@ -21,7 +21,7 @@ struct CombinedGrid: View {
     let color: Color
 
     var body: some View {
-        HeatmapGrid(cells: days.map { HeatmapPalette.rate($0.rate, color: color) }, columns: 20, tileSize: 13)
+        HeatmapGrid(cells: days.map { HeatmapPalette.rate($0.rate, color: color) }, columns: 20)
             .padding(.vertical, 2)
     }
 }
