@@ -11,7 +11,7 @@ struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(NotificationManager.self) private var notifications
 
-    @State private var showingAddHabit = false
+    @State private var showingAddHabit = ScreenshotMode.openAdd
 
     private var sorted: [Habit] {
         habits.sorted {

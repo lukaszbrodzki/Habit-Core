@@ -15,3 +15,7 @@ Kontekst: Strony prawne są po stronie użytkownika (strona www w przygotowaniu)
 ## 2026-09-29 - Brak migracji store'u po przeniesieniu do App Group
 Ustalenie: Brak jednorazowej migracji danych ze starej lokalizacji store'u do kontenera App Group jest akceptowany. Uwaga wyłącznie informacyjna.
 Kontekst: Aplikacja nie jest jeszcze wydana, więc zmiana lokalizacji dotyczy tylko urządzeń deweloperskich, a CloudKit odtwarza dane z prywatnej bazy. Wrócić do tematu, jeśli lokalizacja store'u zmieni się po wydaniu.
+
+## 2026-10-05 - Linki prawne — rozwiązane
+Ustalenie: Wpis o placeholderach linków prawnych jest nieaktualny. Ustawienia linkują do polityki prywatności `https://lukbro.com/habitcore/privacy-policy/`; wiersz „Warunki korzystania” usunięty.
+Kontekst: Decyzja użytkownika — appka jest darmowa, bez konta i zakupów, więc obowiązuje standardowa EULA Apple i własny regulamin nie jest wymagany (App Review Guidelines wymagają linku do polityki prywatności w appce i w App Store Connect, 5.1.1(i)).

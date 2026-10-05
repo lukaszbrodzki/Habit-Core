@@ -20,6 +20,13 @@ struct Habit_CoreApp: App {
 
     init() {
         CloudSyncMonitor.shared.start()
+        #if DEBUG
+        if ScreenshotMode.seedData {
+            let context = container.mainContext
+            ScreenshotSeeder.seed(context)
+            if ScreenshotMode.renderWidgets { ScreenshotSeeder.renderWidgets(context) }
+        }
+        #endif
     }
 
     var body: some Scene {

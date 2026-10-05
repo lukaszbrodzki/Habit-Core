@@ -61,5 +61,8 @@
 
 ## Legal (owned by user — website in progress)
 
-- Terms of Use + Privacy Policy specific to Habit Core (no accounts, no financial data, CloudKit
-  private DB only — do NOT reuse the Wallet Log pages as-is, see chat 2026-09-27)
+- Privacy Policy: https://lukbro.com/habitcore/privacy-policy/ — linked in Settings and the App Store
+  descriptions (2026-10-05). Make sure the page is live before submission, and set it as the
+  Privacy Policy URL in App Store Connect.
+- No own Terms of Use (free app, no accounts/purchases → Apple's standard EULA). Add one if a paid
+  tier ever appears.

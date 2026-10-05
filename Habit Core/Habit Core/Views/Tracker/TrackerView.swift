@@ -11,7 +11,7 @@ struct TrackerView: View {
     @Environment(AppTheme.self) private var theme
     @Environment(StatsSettings.self) private var stats
 
-    @State private var showCombined = false
+    @State private var showCombined = ScreenshotMode.showCombined
     @State private var showCombinedSettings = false
     @State private var showStatsInfo = false
     @State private var habitToEdit: Habit?
